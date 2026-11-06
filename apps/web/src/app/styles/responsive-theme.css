@@ -1,0 +1,104 @@
+.inviteTableRow strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff8f1;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inviteTableRow span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inviteTableRow button {
+  border: 1px solid rgba(244, 81, 44, 0.34);
+  border-radius: 8px;
+  background: rgba(244, 81, 44, 0.13);
+  color: #ffd5c7;
+  padding: 8px 9px;
+  font-weight: 900;
+}
+
+.inviteTableRow button:disabled {
+  opacity: 0.48;
+}
+
+.inviteTimeCell {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+}
+
+.inviteActionCell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dangerAction {
+  min-width: 128px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(244, 81, 44, 0.36);
+  border-radius: 8px;
+  background: rgba(244, 81, 44, 0.12);
+  color: #ffd5c7;
+  padding: 11px 14px;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+
+  .nav {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .navItem,
+  .shell[data-sidebar-collapsed="true"] .navItem {
+    width: 58px;
+    min-width: 58px;
+    height: 58px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    text-align: center;
+  }
+
+  .main {
+    grid-column: auto;
+    width: 100%;
+    padding: 18px 14px 28px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .adminSplitPane,
+  .formGridTwo,
+  .pricingGrid,
+  .formActionRow {
+    grid-template-columns: 1fr;
+  }
+
+  .galleryMasonry {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .galleryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Creation controls: keep the native scroll interaction with a quiet track. */
+@keyframes imageBreathe { from { transform: translate(-15px, 8px) rotate(-35deg) scale(.85); } to { transform: translate(15px,-10px) rotate(100deg) scale(1.18); } }
+@keyframes imageWait { from { transform: translateX(-110%); } to { transform: translateX(440%); } }
+@keyframes imageReveal { from { opacity: .25; filter: blur(10px); transform: scale(1.018); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+

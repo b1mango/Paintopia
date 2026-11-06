@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@paintopia/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src", "tests", "scripts"]
+}

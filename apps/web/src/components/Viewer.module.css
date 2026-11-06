@@ -1,0 +1,139 @@
+/* 观画：无论日夜，画都挂在暗室里 */
+.viewer {
+  --v-ink: #ece6da; --v-ink-2: #bdb5a6; --v-ink-3: #7f786b; --v-hair: rgba(236, 230, 218, .08);
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  background: rgba(11, 10, 9, 0);
+  color: var(--v-ink);
+  transition: background .5s var(--ease), backdrop-filter .5s var(--ease);
+}
+.viewer[data-open] { background: rgba(11, 10, 9, .985); backdrop-filter: blur(24px) saturate(.6); }
+
+.stage { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 56px 64px; }
+/* 一束顶光把画从暗室里托出来，深色作品也不会沉进背景 */
+.stage::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 58% at 50% 48%, rgba(236, 230, 218, .055), transparent 72%); opacity: 0; transition: opacity .6s var(--ease); pointer-events: none; }
+.viewer[data-open] .stage::before { opacity: 1; }
+.frame { position: relative; display: grid; place-items: center; max-width: 100%; max-height: calc(100dvh - 112px); pointer-events: none; }
+.frame > * { grid-area: 1 / 1; }
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 112px);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(236, 230, 218, .13), 0 40px 120px -20px rgba(0, 0, 0, .9);
+  transform-origin: top left;
+  pointer-events: auto;
+}
+.image[data-pending] { opacity: 0; }
+.frame img:first-child:not(:last-child) { width: auto; height: auto; filter: blur(.4px); }
+.loading { position: absolute; left: 50%; bottom: 22px; margin: 0; transform: translateX(-50%); color: var(--v-ink-3); font-size: 11.5px; letter-spacing: .1em; }
+
+.nav {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-top: -22px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--v-ink-2);
+  opacity: 0;
+  transition: opacity .3s, background .2s;
+}
+.stage:hover .nav, .nav:focus-visible { opacity: 1; }
+.nav:hover { background: rgba(236, 230, 218, .1); color: #fff; }
+.prev { left: 12px; }
+.next { right: 12px; }
+.count { position: absolute; left: 28px; bottom: 22px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--v-ink-3); }
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 0;
+  padding: 72px 32px 32px;
+  overflow: auto;
+  border-left: 1px solid rgba(236, 230, 218, .1);
+  background: #161412;
+  box-shadow: -24px 0 48px -24px rgba(0, 0, 0, .6);
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity .45s var(--ease) .15s, transform .6s var(--ease) .15s;
+}
+.viewer[data-open] .side { opacity: 1; transform: none; }
+.who { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #b9b1a3; }
+.avatar + span { margin-left: 2px; }
+.avatar { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--v-ink); color: #131210; font-family: var(--serif); font-size: 13px; }
+.poem { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.9; color: var(--v-ink); white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.line { display: block; height: 1px; background: var(--v-hair); }
+.meta { display: grid; gap: 9px; margin: 0; font-size: 12px; }
+.meta > div { display: grid; grid-template-columns: 3em 1fr; gap: 18px; }
+.meta dt { color: var(--v-ink-3); letter-spacing: .1em; }
+.meta dd { margin: 0; font-family: var(--mono); color: var(--v-ink-2); overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tags li { padding: 4px 10px; border-radius: 999px; background: rgba(236, 230, 218, .08); color: var(--v-ink-2); font-size: 12px; }
+
+.actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.primary {
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #d2553d;
+  color: #fff5ec;
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: .12em;
+  transition: transform .3s var(--ease), filter .2s;
+}
+.primary:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.row { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 8px; }
+.action {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(236, 230, 218, .07);
+  color: var(--v-ink-2);
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .2s, color .2s;
+}
+.action:hover { background: rgba(236, 230, 218, .13); color: var(--v-ink); }
+.action:disabled { opacity: .5; cursor: default; }
+.danger:hover { color: #e48a78; }
+.status { margin: 2px 0 0; color: var(--v-ink-3); font-size: 12px; text-align: center; }
+
+.close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--v-ink-2);
+}
+.close:hover { background: rgba(236, 230, 218, .1); color: #fff; }
+.viewer :focus-visible { outline-color: #d2553d; }
+
+@media (max-width: 900px) {
+  .viewer { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; overflow: auto; }
+  .stage { padding: 56px 12px 12px; }
+  .frame, .image { max-height: 62dvh; }
+  .side { padding: 20px 20px max(24px, env(safe-area-inset-bottom)); gap: 16px; overflow: visible; border-left: 0; border-top: 1px solid rgba(236, 230, 218, .1); box-shadow: none; }
+  .nav { opacity: 1; background: rgba(11, 10, 9, .4); }
+}

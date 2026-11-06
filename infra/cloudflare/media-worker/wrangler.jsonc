@@ -1,0 +1,21 @@
+{
+  "name": "paintopia-media",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "observability": {
+    "enabled": false
+  },
+  "r2_buckets": [
+    {
+      "binding": "ASSETS",
+      "bucket_name": "paintopia-assets"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "media.b1mango.cc",
+      "custom_domain": true
+    }
+  ]
+}

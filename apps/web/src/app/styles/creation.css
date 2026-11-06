@@ -1,0 +1,135 @@
+.field textarea {
+  resize: vertical;
+  min-height: 156px;
+}
+
+.formGridTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.settingsList label {
+  display: grid;
+  gap: 8px;
+  color: rgba(246, 240, 232, 0.68);
+  font-size: 13px;
+}
+
+.primaryAction {
+  width: 100%;
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: #f4512c;
+  color: #180d0a;
+  padding: 13px;
+  font-weight: 900;
+}
+
+.primaryAction:disabled {
+  cursor: wait;
+  filter: grayscale(0.28);
+  opacity: 0.72;
+}
+
+.formActionRow {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.34fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.formActionRow:has(.dangerAction) {
+  grid-template-columns: minmax(132px, 0.34fr) minmax(0, 1fr) minmax(120px, 0.28fr);
+}
+
+.formActionRow .primaryAction {
+  margin-top: 0;
+}
+
+.secondaryAction {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 248, 241, 0.86);
+  padding: 13px;
+  font-weight: 900;
+}
+
+.secondaryAction:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.statusText {
+  margin: 16px 0 0;
+  color: rgba(246, 240, 232, 0.58);
+  min-height: 22px;
+}
+
+@keyframes renderSweep {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
+}
+
+.galleryTools {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.galleryTools label {
+  display: grid;
+  gap: 8px;
+  color: rgba(246, 240, 232, 0.62);
+  font-size: 13px;
+}
+
+.galleryTools input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff8f1;
+  padding: 11px 12px;
+  outline: none;
+}
+
+.galleryColumn {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.galleryMasonry {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
+}
+

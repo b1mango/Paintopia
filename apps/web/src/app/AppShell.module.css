@@ -1,0 +1,8 @@
+/* Keep imports ordered: later theme/responsive rules intentionally override earlier rules.
+   These fragments are inlined into this single CSS Module to preserve selector identity. */
+@import "./styles/shell-controls.css";
+@import "./styles/creation.css";
+@import "./styles/prompt-media.css";
+@import "./styles/responsive-theme.css";
+@import "./styles/settings-workbench.css";
+@import "./styles/theme-refinements.css";

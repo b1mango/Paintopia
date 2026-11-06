@@ -1,0 +1,126 @@
+/* 入境：一幅墨缓缓洇开，一纸契静静等着 */
+.page {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 1fr);
+  align-items: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse 70% 80% at 30% 50%, var(--sheet), var(--paper) 70%);
+  color: var(--ink);
+}
+
+/* 墨：深色时以 screen 叠在暗纸上；浅色时反相，以 multiply 落在宣纸上 */
+.art { display: grid; place-items: center; height: 100dvh; padding: 6vh 2vw 6vh 6vw; }
+.art img {
+  width: min(78vh, 100%);
+  height: auto;
+  mix-blend-mode: screen;
+  opacity: .92;
+  -webkit-mask-image: radial-gradient(circle at 52% 50%, #000 var(--r), transparent calc(var(--r) + 18%));
+  mask-image: radial-gradient(circle at 52% 50%, #000 var(--r), transparent calc(var(--r) + 18%));
+  animation: bleed 3.2s var(--ease) .1s both, drift 22s ease-in-out 3.3s infinite alternate;
+}
+:root[data-theme="light"] .art img { filter: invert(1) contrast(1.05); mix-blend-mode: multiply; opacity: .88; }
+@keyframes bleed { from { --r: 0%; } to { --r: 90%; } }
+@keyframes drift { to { transform: scale(1.018) translateY(-4px); } }
+
+.side { display: grid; grid-template-columns: auto minmax(0, 300px); align-items: center; gap: 56px; padding: 0 8vw 0 2vw; }
+
+/* 题：竖排「绘境」，旁注「以言入画」，钤一方朱印 */
+.brand { position: relative; display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 14px; writing-mode: vertical-rl; animation: fade 1.6s var(--ease) .9s both; }
+.brand h1 { margin: 0; font-family: var(--serif); font-size: 52px; font-weight: 500; letter-spacing: .32em; line-height: 1; }
+.brand p { margin: 6px 0 0; font-family: var(--serif); font-size: 13px; letter-spacing: 1.1em; color: var(--ink-3); }
+.seal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-top: 10px;
+  padding: 2px;
+  border-radius: 3px;
+  background: var(--seal);
+  color: var(--seal-ink);
+  font-family: var(--serif);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1;
+  writing-mode: horizontal-tb;
+  transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--seal-ink) 35%, transparent);
+  animation: stamp .5s var(--ease-in) 1.9s both;
+}
+.seal i { font-style: normal; }
+.seal i:first-child { order: 2; }
+@keyframes stamp { from { opacity: 0; transform: rotate(-3deg) scale(1.6); } }
+@keyframes fade { from { opacity: 0; transform: translateY(10px); } }
+
+/* 契 */
+.form { display: grid; gap: 22px; animation: fade 1.2s var(--ease) 1.3s both; }
+.lead { margin: 0 0 6px; font-family: var(--serif); font-size: 15px; letter-spacing: .3em; color: var(--ink-2); }
+
+.field { position: relative; display: block; padding-top: 14px; }
+.field input {
+  width: 100%;
+  height: 38px;
+  padding: 0 30px 0 0;
+  border: 0;
+  border-bottom: 1px solid var(--hair-2);
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: .04em;
+  transition: border-color .35s var(--ease);
+}
+.field::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease); }
+.field:focus-within::after { transform: scaleX(1); }
+.field span { position: absolute; left: 0; top: 23px; color: var(--ink-3); font-size: 14px; letter-spacing: .2em; pointer-events: none; transform-origin: left; transition: transform .35s var(--ease), color .35s; }
+.field input:focus + span, .field input:not(:placeholder-shown) + span { transform: translateY(-22px) scale(.8); color: var(--ink-3); }
+.field input:-webkit-autofill { -webkit-text-fill-color: var(--ink); transition: background-color 9999s; }
+.reveal { position: absolute; right: 0; bottom: 4px; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; background: none; color: var(--ink-3); transition: color .2s; }
+.reveal:hover { color: var(--ink); }
+.enter { animation: fade .6s var(--ease) both; }
+
+.error { margin: -6px 0 0; color: var(--danger-ink); font-size: 12.5px; line-height: 1.6; }
+
+.submit {
+  height: 46px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--seal);
+  color: var(--seal-ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  letter-spacing: .6em;
+  text-indent: .6em;
+  transition: transform .3s var(--ease), filter .2s, opacity .2s;
+}
+.submit:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+.submit:disabled { opacity: .7; cursor: progress; }
+.switch { justify-self: center; padding: 4px 2px; border: 0; background: none; color: var(--ink-3); font-size: 12.5px; letter-spacing: .14em; transition: color .2s; }
+.switch:hover { color: var(--ink); }
+
+.theme { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-3); transition: color .2s, background .2s; }
+.theme:hover { color: var(--ink); background: var(--hair); }
+
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; align-content: start; overflow: auto; }
+  .art { height: auto; padding: 56px 12vw 0; }
+  .art img { width: min(64vw, 46dvh); }
+  .side { grid-template-columns: 1fr; gap: 28px; padding: 8px 28px max(36px, env(safe-area-inset-bottom)); }
+  .brand { writing-mode: horizontal-tb; flex-direction: row; align-items: baseline; justify-content: center; }
+  .brand h1 { font-size: 36px; letter-spacing: .3em; }
+  .brand p { margin: 0; letter-spacing: .5em; }
+  .seal { margin: 0; align-self: center; }
+  .form { width: min(340px, 100%); justify-self: center; }
+  .lead { text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art img, .brand, .seal, .form, .enter { animation: none; }
+  .art img { --r: 90%; }
+}
+:root[data-reduce-motion="true"] .art img { --r: 90%; }

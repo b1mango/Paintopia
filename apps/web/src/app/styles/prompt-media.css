@@ -1,0 +1,204 @@
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.sectionHeader h2 {
+  margin: 4px 0 0;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.toolCard {
+  min-height: 148px;
+  display: grid;
+  align-content: end;
+  gap: 10px;
+  text-align: left;
+  padding: 20px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.toolCard strong {
+  font-size: 24px;
+}
+
+.toolCard span,
+.galleryCard p,
+.panel p {
+  color: rgba(246, 240, 232, 0.62);
+}
+
+.galleryCard {
+  padding: 16px;
+}
+
+.galleryCard {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  display: block;
+  padding: 12px;
+  align-content: start;
+}
+
+.galleryImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 7px;
+  margin-bottom: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.assetGrid {
+  columns: 240px;
+  column-gap: 14px;
+}
+.assetGrid > .assetCard {
+  display: inline-block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 14px;
+  vertical-align: top;
+}
+
+@media (max-width: 600px) { .assetGrid { columns: 2; } }
+@media (max-width: 480px) { .assetGrid { columns: 1; } }
+
+.assetCard {
+  position: relative;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.assetCard img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.assetMeta strong {
+  margin-left: auto;
+  color: #f4512c;
+  font-size: 12px;
+}
+
+.assetMeta {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.assetMeta p {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: rgba(246, 240, 232, 0.76);
+  line-height: 1.45;
+}
+
+.assetMeta span {
+  color: rgba(246, 240, 232, 0.42);
+  font-size: 12px;
+}
+
+.assetMetaFooter {
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.assetMetaFooter > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyState {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: rgba(246, 240, 232, 0.48);
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.statGrid div {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.statGrid span,
+.statGrid strong {
+  display: block;
+}
+
+.statGrid span {
+  color: rgba(246, 240, 232, 0.54);
+  font-size: 13px;
+}
+
+.statGrid strong {
+  margin-top: 7px;
+}
+
+.statsStack {
+  display: grid;
+  gap: 18px;
+}
+
+.settingsList {
+  display: grid;
+  gap: 18px;
+  max-width: 440px;
+}
+
+.settingsList input[type="checkbox"] {
+  width: auto;
+}
+
+.inlineSetting {
+  display: inline-flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 9px;
+}
+
+.favoriteButton {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(246, 240, 232, 0.58);
+}
+

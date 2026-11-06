@@ -1,0 +1,159 @@
+.topNav {
+  position: relative;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  height: var(--top-h);
+  padding: 0 28px;
+  color: var(--ink);
+}
+
+.brand {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+.brand img { width: 30px; height: 30px; object-fit: contain; transition: transform .6s var(--ease); }
+.brand:hover img { transform: rotate(-8deg); }
+.brandText { display: flex; flex-direction: column; line-height: 1.05; text-align: left; }
+.brandZh { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .12em; }
+.brandEn { margin-top: 2px; font-size: 9.5px; letter-spacing: .32em; color: var(--ink-3); }
+
+.nav { position: relative; display: flex; gap: 6px; }
+.navItem {
+  position: relative;
+  padding: 10px 16px;
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  font-size: 14px;
+  letter-spacing: .08em;
+  transition: color var(--t-touch) var(--ease);
+}
+.navItem:hover, .navItem[aria-current="page"] { color: var(--ink); }
+.navDot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--seal);
+  opacity: 0;
+  transition: transform .55s var(--ease), opacity .3s var(--ease);
+  pointer-events: none;
+}
+
+.right { justify-self: end; display: flex; align-items: center; gap: 12px; }
+.quota { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.quota em { display: inline-block; font-style: normal; font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.quota em[data-bump] { animation: quota-bump .6s var(--ease); }
+@keyframes quota-bump { 30% { color: var(--seal); transform: translateY(-2px) scale(1.12); } }
+/* 每日签到：额度旁的朱印，未签到时出现，点击原地领取 */
+.quotaGroup { position: relative; display: flex; align-items: center; gap: 8px; }
+.checkInSeal { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 1px solid var(--seal); border-radius: 4px; background: var(--seal); color: var(--seal-ink); font-family: var(--serif); font-size: 12px; line-height: 1; cursor: pointer; transform: rotate(-4deg); transition: transform .25s var(--ease), background var(--t-touch); }
+.checkInSeal:hover:not(:disabled), .checkInSeal:focus-visible { transform: rotate(0) scale(1.08); }
+.checkInSeal:disabled { opacity: .6; cursor: progress; }
+.checkInSeal[data-error] { background: none; color: var(--seal); }
+.quotaGain { position: absolute; right: 0; top: -2px; color: var(--seal); font-family: var(--mono); font-size: 12px; pointer-events: none; opacity: 0; animation: quota-gain 1.2s var(--ease); }
+@keyframes quota-gain { 0% { opacity: 0; transform: translateY(4px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+.iconButton {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-2);
+  transition: background var(--t-touch), color var(--t-touch);
+}
+.iconButton:hover { background: var(--hair); color: var(--ink); }
+
+.userMenu { position: relative; }
+.avatar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-size: 14px;
+  transition: transform .35s var(--ease), box-shadow .3s var(--ease);
+}
+.avatar:hover, .avatar[aria-expanded="true"] { transform: scale(1.06); }
+.avatar[data-active] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--seal); }
+.avatar { position: relative; }
+.avatarDot { display: none; position: absolute; top: -1px; right: -1px; width: 9px; height: 9px; border: 2px solid var(--paper); border-radius: 50%; background: var(--seal); }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -4px;
+  min-width: 208px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--sheet);
+  box-shadow: var(--shadow-float);
+  transform-origin: top right;
+  animation: menu-in .32s var(--ease) both;
+}
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+.menuHead { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--hair); }
+.menuHead strong { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 15px; font-weight: 500; letter-spacing: .06em; color: var(--ink); }
+.menuHead span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: var(--ink-3); }
+.roleSeal { display: inline-grid; place-items: center; height: 18px; padding: 0 5px; border: 1px solid var(--seal); border-radius: 3px; color: var(--seal); font-family: var(--serif); font-size: 10.5px; font-style: normal; font-weight: 400; letter-spacing: .12em; transform: rotate(-3deg); }
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink-2);
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+  transition: background var(--t-touch), color var(--t-touch);
+}
+.menuItem:hover, .menuItem:focus-visible { background: var(--hair); color: var(--ink); outline: none; }
+.menuItem[data-current] { color: var(--ink); }
+.menuItem[data-current]::after { content: ""; width: 5px; height: 5px; margin-left: auto; border-radius: 50%; background: var(--seal); }
+.menuRule { display: block; height: 1px; margin: 4px 6px; background: var(--hair); }
+.menuGroup::before { content: ""; display: block; height: 1px; margin: 4px 6px; background: var(--hair); }
+.menuLabel { display: block; padding: 8px 10px 4px; color: var(--ink-4); font-family: var(--serif); font-size: 11px; letter-spacing: .3em; }
+
+@media (max-width: 760px) {
+  .topNav { grid-template-columns: auto 1fr; padding: 0 16px; }
+  .brandEn { display: none; }
+  .nav {
+    position: fixed;
+    left: 50%;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 70;
+    width: max-content;
+    padding: 4px 6px;
+    border-radius: 999px;
+    background: var(--sheet);
+    box-shadow: var(--shadow-float);
+  }
+  .navItem { padding: 10px 14px; white-space: nowrap; }
+  .navDot { bottom: 4px; }
+  .quotaGroup { display: none; }
+  .avatarDot { display: block; }
+}
+@media (prefers-reduced-motion: reduce) { .quota em[data-bump], .quotaGain { animation: none; } .checkInSeal { transition: none; } }
+:global([data-reduce-motion="true"]) .quota em[data-bump], :global([data-reduce-motion="true"]) .quotaGain { animation: none; }

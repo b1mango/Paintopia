@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && npm run build:shared && npm --workspace @paintopia/api run build",
+  "regions": [
+    "sin1"
+  ],
+  "crons": [
+    {
+      "path": "/api/internal/cleanup",
+      "schedule": "15 19 * * *"
+    },
+    {
+      "path": "/api/internal/refresh-prompt-sources",
+      "schedule": "30 19 * * *"
+    }
+  ]
+}

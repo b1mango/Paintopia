@@ -1,0 +1,19 @@
+/* finesse · component: daily-check-in (inline) · register=product
+ * states: default · hover · focus-visible · active · disabled · loading · error · success
+ * tokens: inherited (styles/global.css) */
+.checkIn { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 12px; min-width: 0; }
+.claim { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid var(--seal); border-radius: 999px; background: var(--seal); color: var(--seal-ink); font-family: var(--sans); font-size: 12px; white-space: nowrap; cursor: pointer; outline: 2px solid transparent; outline-offset: 3px; transition: background var(--t-touch) var(--ease), color var(--t-touch) var(--ease), border-color var(--t-touch) var(--ease); }
+.claim:focus-visible { outline-color: var(--seal); }
+.claim:active:not(:disabled) { transform: translateY(1px); }
+.claim:disabled { cursor: default; opacity: 1; }
+.claim[aria-busy="true"]:disabled { opacity: .7; }
+.claim[data-claimed]:disabled { border-color: var(--hair-2); background: none; color: var(--ink-2); opacity: 1; }
+.feedback { color: var(--ok); font-size: 12px; white-space: nowrap; }
+.feedback:empty { display: none; }
+.feedback[data-error] { color: var(--danger-ink); white-space: normal; }
+.spinner { animation: spin 1s linear infinite; }
+@media (hover: hover) { .claim:hover:not(:disabled) { background: color-mix(in srgb, var(--seal), var(--ink) 14%); } }
+@media (pointer: coarse) { .claim { min-height: 40px; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+:global([data-reduce-motion="true"]) .spinner { animation: none; }

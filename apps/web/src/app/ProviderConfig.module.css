@@ -1,0 +1,28 @@
+.row { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--hair); transition: transform 180ms var(--ease), background var(--t-touch) var(--ease); }
+.row:last-child { border-bottom: 1px solid var(--hair); }
+.row:hover { background: var(--hair); }
+.row > button { min-width: 0; border: 0; }
+.row[data-disabled="true"] > button:not(.dragHandle) { opacity: .55; }
+.dragHandle { display: grid; place-items: center; min-height: 44px; padding: 0; background: none; color: var(--ink-3); cursor: grab; touch-action: none; user-select: none; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.actions button { min-height: 38px; min-width: 40px; padding: 8px 10px; border: 1px solid transparent; border-radius: 7px; background: none; color: var(--ink-3); font-size: 12px; transition: background var(--t-touch), color var(--t-touch); }
+.actions button:hover:not(:disabled) { background: var(--hair); color: var(--ink); }
+.actions .danger { color: var(--danger-ink); }
+.actions .danger:hover:not(:disabled) { color: var(--danger-ink); background: var(--seal-soft); }
+.row[data-drop]::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px; background: var(--seal); pointer-events: none; }
+.row[data-drop="before"]::after { top: -1px; }
+.row[data-drop="after"]::after { bottom: -1px; }
+.row[data-lifted="true"] { z-index: 20; background: var(--sheet-2); box-shadow: var(--shadow-float); transition: none; cursor: grabbing; }
+.form.form { padding: 26px 28px 0; border: 0; border-radius: 0; }
+.form > h2 { margin: 0 0 24px; font-size: 16px; color: var(--ink-3); }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+.formGrid > * { min-width: 0; margin: 0; }
+.fullWidth { grid-column: 1 / -1; }
+.form input:not([type="checkbox"]) { min-height: 44px; width: 100%; min-width: 0; }
+.formActions { position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 28px; padding: 18px 0; background: var(--sheet); border-top: 1px solid var(--hair-2); }
+.form > p:last-child { padding-bottom: 20px; }
+@media (max-width: 1000px) { .row { grid-template-columns: 28px minmax(0, 1fr); gap: 0 8px; } .row > .actions { grid-column: 2; padding-bottom: 8px; } }
+@media (max-width: 540px) { .formGrid { grid-template-columns: minmax(0, 1fr); } .form.form { padding: 22px 20px 0; } }
+@media (pointer: coarse) { .actions button { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .row { transition: none; } }
+:global([data-reduce-motion="true"]) .row { transition: none; }

@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "baseUrl": "..",
+    "paths": {
+      "@paintopia/shared": ["packages/shared/src"]
+    }
+  },
+  "include": ["./*.ts"]
+}

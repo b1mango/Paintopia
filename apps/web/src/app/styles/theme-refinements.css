@@ -1,0 +1,111 @@
+/* Paintopia workbench: paper surfaces, compact controls, image-first layout. */
+.shell, .shell[data-theme="light"] { background:var(--page); color:var(--text); height:100dvh; min-height:0; grid-template-rows:auto minmax(0,1fr); font-size:14px; }
+.main { padding:20px; min-width:0; overflow:auto; }
+.content { min-width:0; min-height:0; }
+.shell :is(h2,h3,strong) { color:var(--text); }
+.shell h2 { font-size:17px; font-weight:600; letter-spacing:-.025em; }
+.sizeNote { margin:0; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
+.tablePanel { overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.tablePanel h2 { margin:0; padding:20px; }
+.dataTable { width:100%; border-collapse:collapse; text-align:left; font-size:13px; }
+.dataTable th { color:var(--muted); font-weight:500; background:var(--surface-raised); }
+.dataTable th,.dataTable td { padding:13px 20px; border-top:1px solid var(--border); }
+.dataTable td:not(:first-child) { font-variant-numeric:tabular-nums; }
+@media(max-width:1100px) { .main { padding:16px; } }
+@media(max-width:800px) { .main { padding:12px; } .content { overflow:visible; } }
+
+.providerListPage { min-width:0; }
+.providerListPage .configRail { padding:20px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+.providerListPage .providerTagList { display:flex; flex-direction:column; gap:8px; }
+.providerListPage .providerTagButton,.providerListPage .providerTagActive { width:100%; text-align:left; padding:16px; }
+.drawerHeader { display:flex; align-items:center; justify-content:space-between; padding:20px; border-bottom:1px solid var(--border); }
+.drawerHeader h2 { margin:0; font-size:18px; }
+.drawerHeader button { width:44px; height:44px; display:grid; place-items:center; background:transparent; border:0; color:var(--muted); }
+.manualModelRow { display:flex; gap:8px; min-width:0; grid-column:1/-1; }
+.manualModelRow input { width:100%; min-width:0; padding:10px; background:var(--input); border:1px solid var(--border); border-radius:8px; color:var(--text); }
+.shell .configTabs { background:var(--surface); border-color:var(--border); }
+.shell .statGrid { background:transparent; }
+.shell .statGrid span,.shell .accountInfoGrid span { color:var(--muted); }
+.shell .accountInfoGrid strong { color:var(--text); }
+.capabilityDetails { padding:14px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin:16px 0; }
+.capabilityDetails summary { cursor:pointer; font-weight:600; min-height:32px; }
+.shell .styledSelectButton span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shell[data-theme] .sizeNote { color:var(--muted); margin:0; }
+.shell[data-theme] .field input,.shell[data-theme] .field textarea { background:var(--input); color:var(--text); border-color:var(--border); }
+.shell[data-theme] .toggle { background:var(--border); }
+.shell[data-theme] .toggle:has(input:checked) { background:var(--accent); }
+
+/* Channel editor contrast: shared paper/charcoal tokens in both themes. */
+.shell :is(.providerTagButton, .providerTagActive) span { color: var(--muted); }
+.shell .providerTagMetrics .providerLatency { background: var(--surface); color: var(--muted); }
+.shell .providerTagMetrics .providerLatencyFailed { background: var(--surface); color: var(--danger); }
+.shell .dangerAction { border-color: var(--danger); background: var(--surface); color: var(--danger); }
+.shell .dangerAction:hover:not(:disabled) { background: var(--surface-raised); }
+.shell .dangerAction:focus-visible { outline: 2px solid var(--danger); outline-offset: 3px; }
+.shell :is(.field input, .field textarea, .manualModelRow input)::placeholder { color: var(--muted); opacity: 1; }
+.shell select option { background: var(--surface); color: var(--text); }
+.shell .styledSelectIcon { color: var(--muted); }
+.shell .styledSelectIconOpen { color: var(--accent); }
+.shell :is(.styledSelectOption, .styledSelectOptionActive) { background: var(--surface); color: var(--text); }
+.shell :is(.styledSelectOption:hover, .styledSelectOption:focus-visible, .styledSelectOptionActive) { background: var(--accent-soft); color: var(--accent); }
+.shell .providerTagActive > span:last-child { color: var(--text); }
+
+/* Resolve control colors atomically with the root theme, including transparent inputs.
+   Color transitions retained the old light surface after input text became dark-theme text. */
+
+/* Shared surfaces: reference controls and community gallery must use theme tokens. */
+.shell[data-theme] .galleryTools input { background:var(--input); border:1px solid var(--border); color:var(--text); }
+.shell[data-theme] .galleryTools { width:100%; align-items:stretch; margin:0 0 24px; }
+.shell[data-theme] .emptyState { padding:56px 20px; border:1px dashed var(--border); border-radius:12px; text-align:center; background:var(--surface); }
+.emptyState p { margin:12px 0 0; font-size:13px; color:var(--muted); }
+.shell[data-theme] .configTabs { display:flex; flex-wrap:wrap; gap:4px; padding:0 0 12px; border-bottom:1px solid var(--border); }
+.shell[data-theme] .configTabs button { padding:10px 14px; min-height:42px; white-space:nowrap; }
+.statsSecondary { display:grid; grid-template-columns:minmax(0,2fr) minmax(240px,1fr); gap:16px; align-items:start; }
+.shell[data-theme] .statsSecondary .tablePanel { min-width:0; padding:18px; }
+.shell[data-theme] .statGrid { padding:16px 20px; margin:0; border-bottom:1px solid var(--border); }
+.shell[data-theme] .statGrid > div { background:transparent; border:0; padding:0 16px; border-right:1px solid var(--border); }
+.shell[data-theme] .statGrid > div:last-child { border-right:0; }
+@media(max-width:800px) { .statsSecondary { grid-template-columns:1fr; } }
+.shell[data-theme] .statsSecondary .tablePanel { padding:0; }
+.shell[data-theme] .statsSecondary h2 {padding:16px 18px; border-bottom:1px solid var(--border); font-size:15px;}
+.shell[data-theme] .statsSecondary td,.shell[data-theme] .statsSecondary th { padding:12px 18px; }
+
+/* Theme-complete surfaces and controls: keep artwork primary, metadata secondary. */
+.shell[data-theme] :is(.assetCard,.accountInfoGrid > div) { background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.shell[data-theme] :is(.assetMeta p,.toolCard strong) { color:var(--text); }
+.shell[data-theme] .accountInfoGrid { gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.shell[data-theme] .accountInfoGrid > div { border:0; border-radius:0; border-bottom:1px solid var(--border); gap:16px; }
+.shell[data-theme] .accountInfoGrid > div:last-child { border-bottom:0; }
+.shell[data-theme] .accountInfoGrid strong { overflow-wrap:anywhere; text-align:right; }
+.statsSecondary { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; }
+.shell[data-theme] .statsSecondary .tablePanel { min-height:260px; }
+.shell[data-theme] .statsSecondary h2 { padding:20px 22px; }
+.shell[data-theme] .statsSecondary td,.shell[data-theme] .statsSecondary th { padding:14px 22px; }
+.promptConfigPage { width:min(920px,100%); margin-inline:auto; display:grid; gap:20px; }
+@media(max-width:800px) { .statsSecondary { grid-template-columns:1fr; } }
+.shell[data-theme] .railIconButton { color:var(--text); background:var(--surface-raised); border:1px solid var(--border); min-width:36px; min-height:36px; }
+.shell[data-theme] :is(.templateTagButton,.templateTagActive) { color:var(--text); background:var(--input); border:1px solid var(--border); font-weight:500; }
+.shell[data-theme] .templateTagActive { color:var(--accent); background:var(--accent-soft); border-color:var(--accent); }
+.shell[data-theme] .templateTagButton:hover { background:var(--surface-raised); }
+.shell[data-theme] :is(.userTable,.inviteTable,.userTableRow,.inviteTableRow) { border-color:var(--border); color:var(--text); }
+.shell[data-theme] :is(.userTableHead,.inviteTableHead) { background:var(--surface-raised); color:var(--muted); font-weight:500; }
+.shell[data-theme] :is(.userTableRow strong,.inviteTableRow strong,.userToolbar label) { color:var(--text); }
+.shell[data-theme] :is(.quotaEditor input,.userToolbar input) { background:var(--input); color:var(--text); border:1px solid var(--border); }
+.shell[data-theme] :is(.userTableRow button,.inviteTableRow button,.primaryActionButton) { background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent); min-height:40px; font-weight:500; }
+.shell[data-theme] :is(.settingsList label,.inlineSetting) { color:var(--text); }
+/* Shared form geometry, including custom select triggers. */
+.shell[data-theme] .userToolbar label { display:grid; gap:8px; margin:0; align-content:start; }
+.shell[data-theme] .userToolbar { align-items:end; }
+
+/* Natural image proportions: cards grow with the image, without fixed crop frames. */
+.shell[data-theme] .galleryMasonry .galleryCard { padding:0; overflow:hidden; }
+.shell[data-theme] .galleryMasonry .galleryImage { display:block; width:100%; height:auto; max-height:none; aspect-ratio:auto; object-fit:contain; margin:0; border-radius:0; }
+
+/* Keep image inspection above navigation and its close action outside scrolling content. */
+
+.shell[data-reduce-motion="true"] *, .shell[data-reduce-motion="true"] *::before, .shell[data-reduce-motion="true"] *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+@media(prefers-reduced-motion:reduce) { .shell *, .shell *::before, .shell *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+
+.templateHint {font-size:12px;line-height:1.6;color:var(--muted);font-weight:400;}
+.promptConfigPage > header {margin-bottom:24px;}
+.promptConfigPage > header p {color:var(--muted);line-height:1.7;}

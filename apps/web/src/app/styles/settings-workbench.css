@@ -1,0 +1,26 @@
+/* 个人资料、界面设置各自独立成页，保持同一阅读宽度。 */
+.settingsLayout { width: min(840px, 100%); margin: 28px auto 0; display: grid; gap: 24px; }
+
+/* Canvas-style controls */
+
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle:has(input:checked) {
+  background: #f4512c;
+}
+
