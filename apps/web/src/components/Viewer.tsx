@@ -120,7 +120,7 @@ export function Viewer({ title, imageAlt, items, index, origin, onIndexChange, o
           <img ref={imageRef} key={item.imageUrl} className={styles.image} data-pending={showThumb || undefined} src={item.imageUrl} alt={imageAlt} decoding="async"
             onLoad={() => setLoadedUrl(item.imageUrl)} onError={() => setFailedUrl(item.imageUrl)} />
         </div>
-        {loadedUrl !== item.imageUrl ? <p className={styles.loading} role="status">{failedUrl === item.imageUrl ? "原图加载失败，请关闭后重试" : "正在加载高清原图…"}</p> : null}
+        {loadedUrl !== item.imageUrl ? <p className={styles.loading} role="status">{failedUrl === item.imageUrl ? "高清图加载失败，请关闭后重试" : "正在加载高清图…"}</p> : null}
         {multiple ? <>
           <button type="button" className={`${styles.nav} ${styles.prev}`} aria-label="上一幅" onClick={() => step(-1)}><ChevronLeft size={22} strokeWidth={1.5} aria-hidden="true" /></button>
           <button type="button" className={`${styles.nav} ${styles.next}`} aria-label="下一幅" onClick={() => step(1)}><ChevronRight size={22} strokeWidth={1.5} aria-hidden="true" /></button>

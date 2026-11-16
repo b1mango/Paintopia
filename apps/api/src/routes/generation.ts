@@ -7,7 +7,7 @@ import {
   type ImageGenerationPartial
 } from "../providers/imageProvider.js";
 import type { ServerContext } from "../server/context.js";
-import { cleanupTransientReferenceAssets } from "../services/assets.js";
+import { cleanupTransientReferenceAssets, safeJsonParse, serializeAsset } from "../services/assets.js";
 import {
   type UserRecord
 } from "../services/authService.js";
@@ -18,7 +18,7 @@ import { calculateImageGenerationQuotaCost, consumeImageGenerationQuota, getUser
 import { HttpRequestError } from "../services/requestError.js";
 import { allowUserAction, AuthedRequest } from "./authHelpers.js";
 import { ImageEditRequestInput, parseImageEditRequest } from "./imageEditInput.js";
-import { generationSchema, IMAGE_GENERATION_RATE_LIMIT } from "./schemas.js";
+import { clientRequestIdSchema, generationSchema, GENERATION_REQUEST_RATE_LIMIT, IMAGE_GENERATION_RATE_LIMIT } from "./schemas.js";
 
 export function registerGenerationRoutes(app: FastifyInstance, ctx: ServerContext) {
   const { db: appDb, storage: assetStorage, secrets: providerSecrets, assetRetention, imageProviderHealth, contentSafety } = ctx;
@@ -224,6 +224,34 @@ export function registerGenerationRoutes(app: FastifyInstance, ctx: ServerContex
       };
     } finally { await repo.refundImageQuota(appDb, user.id, jobId); }
   };
+
+  app.get("/api/generate/requests/:clientRequestId", { preHandler: ctx.requireAuth }, async (request, reply) => {
+    const user = (request as AuthedRequest).user;
+    if (!await allowUserAction(appDb, request, reply, "generation-request-status", GENERATION_REQUEST_RATE_LIMIT)) return;
+    const { clientRequestId } = z.object({ clientRequestId: clientRequestIdSchema }).parse(request.params);
+    const jobs = await repo.listRecentGenerationJobs(
+      appDb,
+      user.id,
+      new Date(Date.now() - 24 * 60 * 60 * 1000)
+    );
+    const job = jobs.find(candidate => safeJsonParse(candidate.paramsJson).clientRequestId === clientRequestId);
+    if (!job) return { status: "not_found" };
+    if (job.status === "running" || job.status === "queued") {
+      return { status: "running", startedAt: job.createdAt.toISOString() };
+    }
+
+    const assets = await repo.listGenerationJobAssets(appDb, user.id, job.id);
+    if (job.status === "failed" && assets.length === 0) {
+      return { status: "failed", error: job.error ?? "图像生成失败" };
+    }
+    return {
+      status: "succeeded",
+      jobId: job.id,
+      assets: await Promise.all(assets.map(asset => serializeAsset(appDb, asset, user.email))),
+      remainingQuota: await getUserQuota(appDb, user.id),
+      ...(job.status === "failed" ? { warning: job.error ?? "图片已保存，但生成任务未正常完成。" } : {})
+    };
+  });
 
   app.post("/api/generate", { preHandler: ctx.requireAuth }, async (request, reply) => {
     const user = (request as AuthedRequest).user;

@@ -88,7 +88,7 @@ export function AssetsView({ refreshKey, showOwner, account, canCurate = false, 
 
   const viewerItems: ViewerItem[] = items.map(item => ({
     id: item.id,
-    imageUrl: item.imageUrl,
+    imageUrl: item.displayUrl ?? item.imageUrl,
     thumbnailUrl: feedThumbnail(item),
     prompt: item.prompt,
     author: showOwner ? item.ownerEmail ?? item.ownerName : undefined,

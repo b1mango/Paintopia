@@ -65,7 +65,7 @@ export function GalleryView({ account, canManage, onUsePrompt }: { account: stri
 
   const viewerItems: ViewerItem[] = items.map(item => ({
     id: item.id,
-    imageUrl: item.imageUrl,
+    imageUrl: item.displayUrl ?? item.imageUrl,
     thumbnailUrl: feedThumbnail(item),
     prompt: item.prompt,
     author: item.authorName ?? "佚名",

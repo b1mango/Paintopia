@@ -7,9 +7,9 @@ import { z } from "zod";
 import * as repo from "../db/repository.js";
 import type { ServerContext } from "../server/context.js";
 import { personalAssetExpiry, personalAssetKey } from "../services/assetRetention.js";
-import { approvedGalleryKey, copyAssetObject, pendingGalleryKey, serializeGalleryItem } from "../services/assets.js";
-import { createImageThumbnail } from "../services/imageThumbnail.js";
-import { assetDownloadFileName, getAssetThumbnailKey, sendAssetImage, sendStorageObject } from "./assetDelivery.js";
+import { approvedGalleryKey, assetDisplayKey, copyAssetObject, galleryDisplayKey, pendingGalleryKey, serializeGalleryItem } from "../services/assets.js";
+import { createImageDisplay, createImageThumbnail } from "../services/imageThumbnail.js";
+import { assetDownloadFileName, getAssetThumbnailKey, sendAssetDisplay, sendAssetImage, sendStorageObject } from "./assetDelivery.js";
 import { allowUserAction, AuthedRequest } from "./authHelpers.js";
 import { validateGalleryTagIds } from "./galleryValidation.js";
 import { CONTENT_MUTATION_RATE_LIMIT, galleryReviewSchema, galleryTagIdsSchema, idParamSchema } from "./schemas.js";
@@ -82,6 +82,7 @@ export function registerGalleryRoutes(app: FastifyInstance, ctx: ServerContext) 
     if (galleryItem?.objectKey) {
       await assetStorage.delete(galleryItem.objectKey);
     }
+    if (galleryItem) await assetStorage.delete(galleryDisplayKey(galleryItem.id));
 
     return { expiresAt: (await repo.findAsset(appDb, asset.id))?.expiresAt?.toISOString() ?? null };
   });
@@ -117,6 +118,29 @@ export function registerGalleryRoutes(app: FastifyInstance, ctx: ServerContext) 
       return sendAssetImage(reply, appDb, assetStorage, asset, fileName);
     }
     return sendStorageObject(reply, assetStorage, item.objectKey, asset.mimeType, "private, max-age=3600", fileName);
+  });
+
+  app.get("/api/gallery/:id/display", { preHandler: ctx.requireAuth }, async (request, reply) => {
+    const user = (request as AuthedRequest).user;
+    const { id } = idParamSchema.parse(request.params);
+    const item = await repo.findGallery(appDb, id);
+    if (!item || (item.status !== "approved" && item.userId !== user.id && user.role !== "admin")) {
+      return reply.code(404).send({ error: "画廊图片不存在" });
+    }
+    const asset = await repo.findAsset(appDb, item.assetId);
+    if (asset && await assetStorage.head(assetDisplayKey(asset.id))) {
+      return sendStorageObject(reply, assetStorage, assetDisplayKey(asset.id), "image/webp", "private, max-age=300");
+    }
+    if (!item.objectKey) {
+      if (!asset) return reply.code(404).send({ error: "画廊图片不存在" });
+      return sendAssetDisplay(reply, appDb, assetStorage, asset);
+    }
+    const key = galleryDisplayKey(item.id);
+    if (!await assetStorage.head(key)) {
+      const display = await createImageDisplay(await assetStorage.read(item.objectKey));
+      await assetStorage.put(key, display, "image/webp");
+    }
+    return sendStorageObject(reply, assetStorage, key, "image/webp", "private, max-age=300");
   });
 
   app.get("/api/gallery/:id/thumbnail", { preHandler: ctx.requireAuth }, async (request, reply) => {

@@ -34,6 +34,7 @@ export async function serializeAsset(appDb: AppDatabase, asset: repo.AssetRecord
   return {
     id: asset.id,
     imageUrl: `/api/assets/${asset.id}/original`,
+    displayUrl: `/api/assets/${asset.id}/display`,
     thumbnailUrl: `/api/assets/${asset.id}/thumbnail`,
     sizeBytes: asset.sizeBytes ?? null,
     ownerName: displayAuthorName(email),
@@ -78,6 +79,7 @@ export async function serializeGalleryItem(
     assetId: item.assetId,
     userId: item.userId,
     imageUrl: `/api/gallery/${item.id}/image`,
+    displayUrl: `/api/gallery/${item.id}/display`,
     thumbnailUrl: `/api/gallery/${item.id}/thumbnail`,
     authorName: displayAuthorName(email),
     title: item.title,
@@ -116,6 +118,14 @@ export function storageExtension(mimeType: string) {
 
 export function assetThumbnailKey(assetId: string) {
   return `thumbnails/${assetId}.webp`;
+}
+
+export function assetDisplayKey(assetId: string) {
+  return `thumbnails/${assetId}-display.webp`;
+}
+
+export function galleryDisplayKey(galleryItemId: string) {
+  return `thumbnails/gallery-${galleryItemId}-display.webp`;
 }
 
 export function pendingGalleryKey(userId: string, galleryItemId: string, mimeType: string) {
@@ -193,6 +203,7 @@ export async function deleteStoredAsset(appDb: AppDatabase, storage: AssetStorag
     await storage.delete(asset.thumbPath);
   }
   await storage.delete(`thumbnails/${asset.id}-320.webp`);
+  await storage.delete(assetDisplayKey(asset.id));
 }
 
 export async function cleanupTransientReferenceAssets(

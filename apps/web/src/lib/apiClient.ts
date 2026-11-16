@@ -81,7 +81,7 @@ export const apiClient = {
     input: ImageEditGenerationRequest,
     onRecovering?: () => void
   ): Promise<GenerationResponse> {
-    const clientRequestId = createClientRequestId();
+    const clientRequestId = typeof input.params.clientRequestId === "string" ? input.params.clientRequestId : createClientRequestId();
     let uploadedAssets: GeneratedAsset[];
     try {
       uploadedAssets = await mapUploads(input.images ?? [], image => uploadAssetFile(image, input.prompt));
@@ -113,6 +113,11 @@ export const apiClient = {
         .catch(() => undefined);
       return { assets, remainingQuota, recovered: true };
     }
+  },
+
+  /** 刷新后接续生成：按客户端请求 ID 查询本人这次生成的状态。 */
+  async getGenerationRequest(clientRequestId: string): Promise<GenerationRequestState> {
+    return request(`/api/generate/requests/${encodeURIComponent(clientRequestId)}`);
   },
 
   async uploadAsset(file: File, prompt = ""): Promise<GeneratedAsset> {
@@ -521,6 +526,8 @@ export type GeneratedAsset = {
   sizeBytes?: number | null;
   id: string;
   imageUrl: string;
+  /** 观画用高清预览（WebP，长边 ≤ 2560）；下载仍走原图。 */
+  displayUrl?: string;
   thumbnailUrl?: string;
   thumbnailEdgeUrl?: string | null;
   thumbnailEdgeExpiresAt?: number;
@@ -544,6 +551,7 @@ export type GalleryItem = {
   assetId: string;
   userId: string;
   imageUrl: string;
+  displayUrl?: string;
   thumbnailUrl?: string;
   thumbnailEdgeUrl?: string | null;
   thumbnailEdgeExpiresAt?: number;
@@ -573,6 +581,12 @@ export type GenerationPreview = {
   imageUrl: string;
   partialImageIndex: number;
 };
+
+export type GenerationRequestState =
+  | { status: "running"; startedAt?: string }
+  | ({ status: "succeeded"; warning?: string } & GenerationResponse)
+  | { status: "failed"; error?: string }
+  | { status: "not_found" };
 
 export type GenerationResponse = {
   jobId?: string;

@@ -89,6 +89,7 @@ export function registerMediaFeed(app: FastifyInstance, db: AppDatabase, guard: 
         thumbnailUrl: `/api/${kind}/${row.id}/thumbnail`,
         thumbnailEdgeUrl: row.thumb_path ? createMediaEdgeUrl(row.thumb_path, now) : null,
         thumbnailEdgeExpiresAt: mediaEdgeClientExpiry(now),
+        displayUrl: `/api/${kind}/${row.id}/display`,
         imageUrl: `/api/${kind}/${row.id}/${kind === "assets" ? "original" : "image"}`
       };
       return kind === "assets" ? {

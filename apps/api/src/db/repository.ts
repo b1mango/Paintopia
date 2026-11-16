@@ -512,6 +512,21 @@ export async function listGenerationJobs(db: DatabaseExecutor, userId?: string, 
   return rows.map((row) => ({ ...row, createdAt: toDate(row.createdAt), updatedAt: toDate(row.updatedAt) }));
 }
 
+export async function listRecentGenerationJobs(
+  db: DatabaseExecutor,
+  userId: string,
+  createdAfter: Date,
+  limit = 50
+): Promise<GenerationJobRecord[]> {
+  const rows = await db.query<any>(`
+    SELECT id, user_id AS "userId", provider_id AS "providerId", status, prompt,
+      params_json AS "paramsJson", error, created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM generation_jobs WHERE user_id = ? AND created_at >= ?
+    ORDER BY created_at DESC, id LIMIT ?
+  `, [userId, createdAfter, limit]);
+  return rows.map((row) => ({ ...row, createdAt: toDate(row.createdAt), updatedAt: toDate(row.updatedAt) }));
+}
+
 export async function imageGenerationLedger(db: DatabaseExecutor, userId?: string) {
   return db.query<{ userId: string; amount: number; note: string }>(`
     SELECT user_id AS "userId", amount, note FROM usage_ledger
@@ -571,6 +586,19 @@ export async function countOwnedAssets(db: DatabaseExecutor, userId: string): Pr
 export async function findAsset(db: DatabaseExecutor, id: string): Promise<AssetRecord | undefined> {
   const row = await db.queryOne<any>(`SELECT ${assetColumns} FROM assets WHERE id = ?`, [id]);
   return row ? normalizeAsset(row) : undefined;
+}
+
+export async function listGenerationJobAssets(
+  db: DatabaseExecutor,
+  userId: string,
+  jobId: string
+): Promise<AssetRecord[]> {
+  const rows = await db.query<any>(`
+    SELECT ${assetColumns} FROM assets
+    WHERE user_id = ? AND job_id = ? AND status = 'ready'
+    ORDER BY created_at, id
+  `, [userId, jobId]);
+  return rows.map(normalizeAsset);
 }
 
 export async function insertAsset(db: DatabaseExecutor, asset: AssetRecord): Promise<void> {

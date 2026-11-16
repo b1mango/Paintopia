@@ -103,8 +103,9 @@
 
 /* Keep image inspection above navigation and its close action outside scrolling content. */
 
-.shell[data-reduce-motion="true"] *, .shell[data-reduce-motion="true"] *::before, .shell[data-reduce-motion="true"] *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-@media(prefers-reduced-motion:reduce) { .shell *, .shell *::before, .shell *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+/* 生成进度（data-live-motion）属于状态反馈，减少动态时照常播放 */
+.shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *), .shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::before, .shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+@media(prefers-reduced-motion:reduce) { .shell :not([data-live-motion], [data-live-motion] *), .shell :not([data-live-motion], [data-live-motion] *)::before, .shell :not([data-live-motion], [data-live-motion] *)::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 
 .templateHint {font-size:12px;line-height:1.6;color:var(--muted);font-weight:400;}
 .promptConfigPage > header {margin-bottom:24px;}

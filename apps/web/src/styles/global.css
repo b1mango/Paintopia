@@ -105,10 +105,10 @@ kbd {
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* 减少动态：仪式退化为淡入 */
+/* 减少动态：仪式退化为淡入。生成进度（data-live-motion）是状态反馈，照常播放 */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  :not([data-live-motion], [data-live-motion] *), :not([data-live-motion], [data-live-motion] *)::before, :not([data-live-motion], [data-live-motion] *)::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
-:root[data-reduce-motion="true"] *, :root[data-reduce-motion="true"] *::before, :root[data-reduce-motion="true"] *::after {
+:root[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *), :root[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::before, :root[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::after {
   animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important;
 }

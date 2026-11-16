@@ -2,7 +2,7 @@ import { clearMediaCache } from "../lib/useMediaFeed";
 import { Suspense, useEffect, useRef, useState } from "react";
 import styles from "./AppShell.module.css";
 import shell from "./Shell.module.css";
-import { apiClient, type GeneratedAsset, type ImageModelCapability, type QuotaPricingRule } from "../lib/apiClient";
+import { apiClient, type GeneratedAsset, type GenerationResponse, type ImageModelCapability, type QuotaPricingRule } from "../lib/apiClient";
 import { resolveImageSize, validateImageSize, inferImageResolution, inferImageAspectRatio } from "@paintopia/shared";
 import { useUiStore, useResolvedTheme } from "../lib/uiStore";
 import { PromptApplyDialog } from "../features/prompts/PromptApplyDialog";
@@ -12,6 +12,7 @@ import { CreateView } from "../features/create/CreateView";
 import { PROVIDER_CHANGE_EVENT } from "./providerShared";
 import { DEFAULT_IMAGE_RESOLUTION, IMAGE_RESOLUTION_OPTIONS, fallbackImageCapabilities, capabilityKey, defaultQuotaPricingRules, matchHistorySource, getEstimatedQuotaCost, MAX_REFERENCE_IMAGES } from "./creationShared";
 import { formatDuration } from "./formatters";
+import { clearPendingGeneration, createClientRequestId, loadPendingGeneration, PENDING_GENERATION_MAX_AGE_MS, savePendingGeneration, type PendingGeneration } from "../features/create/pendingGeneration";
 import { lazyPage, whenIdle } from "../lib/lazyPage";
 import { type PaintopiaUser, type ConfigSection, type ModuleId } from "./appTypes";
 
@@ -206,10 +207,35 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
     else { setPrompt(text); onNavigate?.("create"); }
   }
 
+  const pendingKey = user.id ?? user.email;
+  // 刷新/关闭页面时进行中的请求会被浏览器中止；此时不清除接续记录
+  const unloading = useRef(false);
+  useEffect(() => {
+    const mark = () => { unloading.current = true; };
+    window.addEventListener("pagehide", mark);
+    return () => window.removeEventListener("pagehide", mark);
+  }, []);
+
+  function finishGeneration(result: GenerationResponse, startedAt: number, requestedCount: number) {
+    const elapsed = Date.now() - startedAt;
+    setDuration(elapsed);
+    setAssets(result.assets);
+    setPreviewImageUrl(null);
+    setAssetIndex(0);
+    if (typeof result.remainingQuota === "number") setRemainingQuota(result.remainingQuota);
+    const warnings = Array.from(new Set(result.assets.map((item) => item.params?.resolutionWarning).filter((value): value is string => typeof value === "string")));
+    const completionStatus = result.assets.length < requestedCount ? "已保留 " + result.assets.length + "/" + requestedCount + " 张图片，仅按成功张数结算，用时 " + formatDuration(elapsed) : result.assets.length > 1 ? `生成完成，共 ${result.assets.length} 张，用时 ${formatDuration(elapsed)}` : `生成完成，用时 ${formatDuration(elapsed)}`;
+    setStatus(warnings.length ? `${completionStatus}。${warnings.join("；")}` : completionStatus);
+    setRefreshKey((value) => value + 1);
+    // 高清预览提前进缓存，点开观画时直接可用
+    for (const asset of result.assets.slice(0, 4)) if (asset.displayUrl) new Image().src = asset.displayUrl;
+  }
+
   async function startGeneration() {
     if (!prompt.trim() || isGenerating || !imageCapabilities.length) return;
     historyDraft.current = null; setSelectedHistoryId(null);
     const startedAt = Date.now();
+    const clientRequestId = createClientRequestId();
     generationStartedAt.current = startedAt;
     setDuration(0);
     setIsGenerating(true);
@@ -222,7 +248,8 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
       if (selected.imageCapabilities?.qualities?.length && !selected.imageCapabilities.qualities.includes(imageQuality)) throw new Error("当前质量不在该渠道的允许选项中，请重新选择");
       const providerId = selected.providerId;
       const size = !imageWidth && !imageHeight ? "auto" : validateImageSize(String(Math.round(Number(imageWidth) / 16) * 16) + "x" + String(Math.round(Number(imageHeight) / 16) * 16));
-      const params = { model: selected.model, resolution: size === "auto" ? "auto" : inferImageResolution(size), aspectRatio, size, quality: imageQuality, background: transparentBackground ? "transparent" : "auto", n: imageCount };
+      const params = { model: selected.model, resolution: size === "auto" ? "auto" : inferImageResolution(size), aspectRatio, size, quality: imageQuality, background: transparentBackground ? "transparent" : "auto", n: imageCount, clientRequestId };
+      savePendingGeneration(pendingKey, { clientRequestId, startedAt, prompt, imageModel, imageResolution, imageQuality, imageCount, imageWidth, imageHeight, aspectRatio, transparentBackground });
       const result = mode === "edit"
         ? await apiClient.generateEdit(
             { prompt, params, providerId, images: files, assetIds },
@@ -232,25 +259,80 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
           setPreviewImageUrl(preview.imageUrl);
           setStatus("已收到过程预览，等待最终图片");
         }, (event) => setStatus(event.message));
-      const elapsed = Date.now() - startedAt;
-      setDuration(elapsed);
-      setAssets(result.assets);
-      setPreviewImageUrl(null);
-      setAssetIndex(0);
-      if (typeof result.remainingQuota === "number") {
-        setRemainingQuota(result.remainingQuota);
-      }
-      const warnings = Array.from(new Set(result.assets.map((item) => item.params?.resolutionWarning).filter((value): value is string => typeof value === "string")));
-      const completionStatus = result.assets.length < imageCount ? "已保留 " + result.assets.length + "/" + imageCount + " 张图片，仅按成功张数结算，用时 " + formatDuration(elapsed) : result.assets.length > 1 ? `生成完成，共 ${result.assets.length} 张，用时 ${formatDuration(elapsed)}` : `生成完成，用时 ${formatDuration(elapsed)}`;
-      setStatus(warnings.length ? `${completionStatus}。${warnings.join("；")}` : completionStatus);
-      setRefreshKey((value) => value + 1);
+      finishGeneration(result, startedAt, imageCount);
     } catch (error) {
+      if (unloading.current) return;
       setPreviewImageUrl(null);
       setStatus(error instanceof Error ? error.message : "生成失败");
     } finally {
-      setDuration(Date.now() - startedAt);
-      setIsGenerating(false);
+      if (!unloading.current) {
+        clearPendingGeneration(pendingKey, clientRequestId);
+        setDuration(Date.now() - startedAt);
+        setIsGenerating(false);
+      }
     }
+  }
+
+  // 刷新前有进行中的生成：恢复参数与「落墨中」，轮询服务端直到出结果
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current) return;
+    resumed.current = true;
+    const pending = loadPendingGeneration(pendingKey);
+    if (pending) void resumeGeneration(pending);
+  }, []);
+
+  async function resumeGeneration(pending: PendingGeneration) {
+    restoredSource.current = null;
+    generationStartedAt.current = pending.startedAt;
+    setPrompt(pending.prompt);
+    setImageModel(pending.imageModel); setImageResolution(pending.imageResolution); setImageQuality(pending.imageQuality); setImageCount(pending.imageCount);
+    setImageWidth(pending.imageWidth); setImageHeight(pending.imageHeight); setAspectRatio(pending.aspectRatio); setTransparentBackground(pending.transparentBackground);
+    setAssets([]); setPreviewImageUrl(null);
+    setDuration(Date.now() - pending.startedAt);
+    setIsGenerating(true);
+    setStatus("已接续刷新前的生成，等待最终图片");
+    let missing = 0;
+    let networkFailures = 0;
+    try {
+      while (!unloading.current) {
+        if (Date.now() - pending.startedAt > PENDING_GENERATION_MAX_AGE_MS) throw new Error("这次生成等待过久，若稍后完成会出现在「我的作品」中");
+        try {
+          const state = await apiClient.getGenerationRequest(pending.clientRequestId);
+          networkFailures = 0;
+          if (state.status === "succeeded") {
+            finishGeneration(state, pending.startedAt, pending.imageCount);
+            if (state.warning) setStatus((current) => `${current}。${state.warning}`);
+            return;
+          }
+          if (state.status === "failed") throw new Error(state.error || "生成失败");
+          // 刷新得太快时请求可能没送达服务端；连续几次查不到就不再等
+          if (state.status === "not_found" && ++missing >= 4) throw new Error("刷新前的生成请求没有送达服务端，请重新生成");
+        } catch (error) {
+          if (!(error instanceof TypeError)) throw error;
+          if (++networkFailures >= 5) throw new Error("网络连接中断，恢复后可在「我的作品」查看结果");
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 2500));
+      }
+    } catch (error) {
+      if (unloading.current) return;
+      setStatus(error instanceof Error ? error.message : "生成失败");
+    } finally {
+      if (!unloading.current) {
+        clearPendingGeneration(pendingKey, pending.clientRequestId);
+        setDuration(Date.now() - pending.startedAt);
+        setIsGenerating(false);
+      }
+    }
+  }
+
+  /** 收起本次结果，回到空白画案；模型与尺寸等参数保留。 */
+  function clearCreation() {
+    if (isGenerating) return;
+    historyDraft.current = null; setSelectedHistoryId(null); restoredSource.current = null;
+    setPrompt(""); setFiles([]); setAssetIds([]);
+    setAssets([]); setAssetIndex(0); setPreviewImageUrl(null);
+    setDuration(null); setStatus("等待生成");
   }
 
   const estimatedQuotaCost = getEstimatedQuotaCost(quotaPricingRules, imageWidth && imageHeight && Number(imageWidth) > 0 && Number(imageHeight) > 0 ? inferImageResolution(String(Math.max(16, Math.round(Number(imageWidth) / 16) * 16)) + "x" + String(Math.max(16, Math.round(Number(imageHeight) / 16) * 16))) : "auto", imageQuality, imageCount);
@@ -286,7 +368,7 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
             swapDimensions={swapDimensions} commitDimensions={commitDimensions} estimatedQuotaCost={estimatedQuotaCost}
             isGenerating={isGenerating} status={status} previewImageUrl={previewImageUrl} duration={duration}
             assets={assets} assetIndex={assetIndex} setAssetIndex={setAssetIndex} startGeneration={startGeneration}
-            refreshKey={refreshKey} selectedHistoryId={selectedHistoryId} onHistoryToggle={selectHistory} onHistorySelect={restoreAsset}
+            refreshKey={refreshKey} selectedHistoryId={selectedHistoryId} onHistoryToggle={selectHistory} onHistorySelect={restoreAsset} onClear={clearCreation}
             onOpenLibrary={() => onNavigate?.("prompt-library")} /> : null}
           <Suspense fallback={<div className={shell.pageFallback} aria-busy="true" />}>
           {activeModule === "prompt-library" ? <PromptLibraryView onUsePrompt={applyPrompt} canManage={user.role === "admin"} /> : null}

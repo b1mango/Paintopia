@@ -2,9 +2,9 @@ import { type FastifyReply } from "fastify";
 import path from "node:path";
 import { type AppDatabase } from "../db/database.js";
 import * as repo from "../db/repository.js";
-import { assetThumbnailKey, readStoredAsset, storageExtension } from "../services/assets.js";
+import { assetDisplayKey, assetThumbnailKey, readStoredAsset, storageExtension } from "../services/assets.js";
 import { type AssetStorage } from "../services/assetStorage.js";
-import { createImageThumbnail } from "../services/imageThumbnail.js";
+import { createImageDisplay, createImageThumbnail } from "../services/imageThumbnail.js";
 import { createMediaEdgeUrl } from "../services/mediaEdge.js";
 
 export async function sendAssetImage(
@@ -72,6 +72,20 @@ export async function sendAssetThumbnail(
     console.warn("Paintopia thumbnail fallback", error instanceof Error ? error.message : error);
     return reply.code(503).header("Retry-After", "15").send({ error: "缩略图暂不可用，请重试" });
   }
+}
+
+export async function sendAssetDisplay(
+  reply: FastifyReply,
+  appDb: AppDatabase,
+  storage: AssetStorage,
+  asset: repo.AssetRecord
+) {
+  const key = assetDisplayKey(asset.id);
+  if (!await storage.head(key)) {
+    const display = await createImageDisplay(await readStoredAsset(appDb, storage, asset));
+    await storage.put(key, display, "image/webp");
+  }
+  return sendStorageObject(reply, storage, key, "image/webp", "private, max-age=300");
 }
 
 export async function sendStorageObject(

@@ -264,7 +264,7 @@ describe("generation workflow", () => {
     fireEvent.click(screen.getByTestId("start-generation-button"));
     await waitFor(() => expect(generate).toHaveBeenCalledWith(expect.objectContaining({
       providerId: "A",
-      params: { model, size: "2048x1536", resolution: "2K", aspectRatio: "4:3", quality: "high", background: "auto", n: 1 }
+      params: { model, size: "2048x1536", resolution: "2K", aspectRatio: "4:3", quality: "high", background: "auto", n: 1, clientRequestId: expect.any(String) }
     }), expect.any(Function), expect.any(Function)));
     expect(generate).toHaveBeenCalledTimes(1);
   });
@@ -457,4 +457,62 @@ it("keeps Images generation channels selectable in image edit mode", async () =>
   fireEvent.change(screen.getByTestId("image-edit-upload"),{target:{files:[new File([new Uint8Array([1])],"ref.png",{type:"image/png"})]}});
   expect(await screen.findByText("图生图 · 已垫 1 张参考")).toBeInTheDocument();
   expect(await screen.findByRole("option",{name:`${model} · 来源A`})).toBeInTheDocument();
+});
+describe("generation resume and clearing", () => {
+  const pendingKey = `paintopia:pending-generation:${user.email}`;
+  const savedAsset = { id: "resumed", imageUrl: "/api/assets/resumed/original", displayUrl: "/api/assets/resumed/display", prompt: "雨后山寺", params: {}, createdAt: "2026-11-16T00:00:00Z" };
+  afterEach(() => localStorage.removeItem(pendingKey));
+
+  it("keeps a pending record while generating and clears it once the result arrives", async () => {
+    let finish: (value: { assets: typeof savedAsset[] }) => void = () => {};
+    vi.spyOn(apiClient, "generateStream").mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    render(<AppShell user={user} />);
+    await screen.findByRole("option", { name: `${model} · 来源A` });
+    fireEvent.click(screen.getByTestId("start-generation-button"));
+    await waitFor(() => expect(localStorage.getItem(pendingKey)).not.toBeNull());
+    const pending = JSON.parse(localStorage.getItem(pendingKey)!);
+    expect(vi.mocked(apiClient.generateStream).mock.calls[0][0].params).toMatchObject({ clientRequestId: pending.clientRequestId });
+    await act(async () => finish({ assets: [savedAsset] }));
+    expect(await screen.findByAltText("生成结果")).toHaveAttribute("src", "/api/assets/resumed/display");
+    expect(localStorage.getItem(pendingKey)).toBeNull();
+  });
+
+  it("resumes a generation interrupted by a page refresh and shows its result", async () => {
+    localStorage.setItem(pendingKey, JSON.stringify({ clientRequestId: "req-1", startedAt: Date.now() - 20_000, prompt: "雨后山寺", imageModel: `A::${model}`, imageResolution: "2K", imageQuality: "high", imageCount: 1, imageWidth: "2048", imageHeight: "1536", aspectRatio: "4:3", transparentBackground: false }));
+    const lookup = vi.spyOn(apiClient, "getGenerationRequest")
+      .mockResolvedValueOnce({ status: "running", startedAt: "2026-11-16T00:00:00Z" })
+      .mockResolvedValueOnce({ status: "succeeded", assets: [savedAsset], remainingQuota: 88 });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      render(<AppShell user={user} />);
+      expect((await screen.findAllByText(/已接续刷新前的生成/)).length).toBeGreaterThan(0);
+      expect(screen.getByLabelText("提示词")).toHaveValue("雨后山寺");
+      expect(screen.getByTestId("start-generation-button")).toHaveAttribute("data-busy");
+      await act(async () => { await vi.advanceTimersByTimeAsync(2600); });
+      expect(await screen.findByAltText("生成结果")).toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+    expect(lookup).toHaveBeenCalledWith("req-1");
+    expect(localStorage.getItem(pendingKey)).toBeNull();
+  });
+
+  it("reports a failed resumed generation and stops waiting", async () => {
+    localStorage.setItem(pendingKey, JSON.stringify({ clientRequestId: "req-2", startedAt: Date.now() - 5_000, prompt: "p", imageModel: `A::${model}`, imageResolution: "1K", imageQuality: "high", imageCount: 1, imageWidth: "1024", imageHeight: "1024", aspectRatio: "1:1", transparentBackground: false }));
+    vi.spyOn(apiClient, "getGenerationRequest").mockResolvedValue({ status: "failed", error: "上游拒绝请求" });
+    render(<AppShell user={user} />);
+    expect(await screen.findByText("上游拒绝请求")).toBeInTheDocument();
+    expect(screen.getByTestId("start-generation-button")).not.toHaveAttribute("data-busy");
+    expect(localStorage.getItem(pendingKey)).toBeNull();
+  });
+
+  it("clears the finished painting back to an empty prompt", async () => {
+    vi.spyOn(apiClient, "generateStream").mockResolvedValue({ assets: [savedAsset] });
+    render(<AppShell user={user} />);
+    await screen.findByRole("option", { name: `${model} · 来源A` });
+    fireEvent.click(screen.getByTestId("start-generation-button"));
+    fireEvent.click(await screen.findByTestId("clear-stage"));
+    expect(screen.getByLabelText("提示词")).toHaveValue("");
+    expect(screen.queryByAltText("生成结果")).not.toBeInTheDocument();
+    expect(screen.getByText("落笔成境")).toBeInTheDocument();
+    expect(screen.queryByText("雨后山寺")).not.toBeInTheDocument();
+  });
 });

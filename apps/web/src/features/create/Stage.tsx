@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Download, ImagePlus, Maximize2, RotateCcw, Send } from "lucide-react";
+import { Download, Eraser, ImagePlus, Maximize2, RotateCcw, Send } from "lucide-react";
 import { apiClient, type GeneratedAsset } from "../../lib/apiClient";
 import { artSize, formatBytes, QUALITY_LABELS } from "../../lib/artMeta";
 import { smallThumbnail, smallThumbnailFallback } from "../../lib/thumbnail";
@@ -21,9 +21,29 @@ export interface StageProps {
   onReuse: (asset: GeneratedAsset) => void;
   onUseAsReference: (asset: GeneratedAsset) => void;
   onRetry: () => void;
+  /** 收起本次结果，回到空白画案。 */
+  onClear: () => void;
 }
 
 const thumb = (asset: GeneratedAsset) => asset.thumbnailUrl ?? `/api/assets/${encodeURIComponent(asset.id)}/thumbnail`;
+
+/** 落墨时由远及近渐次勾出的三道山脊（400×240 画框）。 */
+const RIDGES = [
+  "M0 170C40 150 70 120 105 135S160 110 195 128S260 95 300 120S360 135 400 115",
+  "M0 195C35 175 80 160 120 178S190 150 235 172S300 158 340 176S385 168 400 172",
+  "M0 222C50 205 95 214 140 206S220 196 260 210S340 200 400 212"
+];
+
+/** 画案上先放 640 缩略图，高清预览到达后淡入盖上；同时为观画预热缓存。 */
+function StageImage({ asset }: { asset: GeneratedAsset }) {
+  const [sharp, setSharp] = useState(false);
+  return (
+    <>
+      <img src={thumb(asset)} decoding="async" alt={asset.displayUrl ? "" : "生成结果"} aria-hidden={asset.displayUrl ? true : undefined} />
+      {asset.displayUrl ? <img className={styles.sharp} data-loaded={sharp || undefined} src={asset.displayUrl} decoding="async" alt="生成结果" onLoad={() => setSharp(true)} /> : null}
+    </>
+  );
+}
 
 function ratioOf(asset: GeneratedAsset | null, width: string, height: string, aspectRatio: string) {
   const size = asset ? artSize(asset) : undefined;
@@ -94,7 +114,7 @@ export function Stage(props: StageProps) {
               data-generating={props.isGenerating} data-complete={Boolean(asset) && !props.isGenerating && props.duration !== null} data-error={hasError || undefined}>
               {asset ? (
                 <button type="button" className={styles.zoom} aria-label="放大生成图片" onClick={() => props.onZoom(artRef.current?.getBoundingClientRect() ?? null)}>
-                  <img key={asset.id} src={thumb(asset)} decoding="async" alt="生成结果" />
+                  <StageImage key={asset.id} asset={asset} />
                 </button>
               ) : props.previewImageUrl ? (
                 <button type="button" className={styles.zoom} aria-label="放大预览图片" onClick={() => props.onZoom(artRef.current?.getBoundingClientRect() ?? null)}>
@@ -102,13 +122,28 @@ export function Stage(props: StageProps) {
                 </button>
               ) : null}
               {props.isGenerating && !props.previewImageUrl ? (
-                <div className={styles.brewing} aria-hidden="true">
+                <div className={styles.brewing} data-live-motion aria-hidden="true">
+                  <svg className={styles.scape} viewBox="0 0 400 240" preserveAspectRatio="xMidYMax slice">
+                    {RIDGES.map((d, index) => (
+                      <g key={index} className={styles.ridge} style={{ animationDelay: `${index * 0.7}s`, "--ridge-ink": `${0.34 - index * 0.08}` } as CSSProperties}>
+                        <path className={styles.ridgeWash} d={`${d} L400 240 L0 240 Z`} />
+                        <path className={styles.ridgeLine} d={d} pathLength={1} />
+                      </g>
+                    ))}
+                  </svg>
+                  <i className={styles.mist} />
+                  <i className={styles.mist} style={{ top: "62%", animationDelay: "-7s", animationDuration: "16s" }} />
                   <i className={styles.bloom} style={{ left: "18%", top: "22%", width: "46%", height: "46%" }} />
                   <i className={styles.bloom} style={{ left: "44%", top: "40%", width: "52%", height: "52%", animationDelay: "-2s" }} />
                   <i className={styles.bloom} style={{ left: "10%", top: "52%", width: "38%", height: "38%", animationDelay: "-4s" }} />
+                  <i className={`${styles.bloom} ${styles.bloomSeal}`} style={{ left: "58%", top: "14%", width: "26%", height: "26%", animationDelay: "-3s" }} />
                   <div className={styles.brewCenter}>
-                    <Enso className={styles.brewEnso} variant="draw" />
-                    <span className={styles.brewState}>落墨中</span>
+                    <span className={styles.ensoWrap}>
+                      <i className={styles.ripple} />
+                      <i className={styles.ripple} style={{ animationDelay: "1.4s" }} />
+                      <Enso className={styles.brewEnso} variant="draw" />
+                    </span>
+                    <span className={styles.brewState}>{Array.from("落墨中").map((char, index) => <span key={index} style={{ animationDelay: `${index * 0.28}s` }}>{char}</span>)}</span>
                     <span className={styles.brewSub}>{props.status}</span>
                     <span className={styles.brewTimer}>{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")}</span>
                     {seconds >= 30 ? <span className={styles.brewSub}>部分接口仅在完成后返回结果，请勿重复提交。</span> : null}
@@ -128,7 +163,6 @@ export function Stage(props: StageProps) {
               <div className={styles.caption} key={asset.id}>
                 <span className={styles.stamp} aria-hidden="true">成</span>
                 <div className={styles.captionText}>
-                  <p className={styles.poem} title={asset.prompt}>{asset.prompt}</p>
                   {meta ? <p className={styles.meta}>{meta}</p> : null}
                 </div>
                 <div className={styles.acts}>
@@ -139,6 +173,7 @@ export function Stage(props: StageProps) {
                   <button type="button" className={styles.tbtn} title="投稿到画廊，审核后公开" disabled={shareState === "busy" || shareState === "done"} onClick={() => void share(asset)}>
                     <Send size={14} aria-hidden="true" />{shareState === "done" ? "已投稿" : shareState === "busy" ? "投稿中" : shareState === "error" ? "重投" : "投稿"}
                   </button>
+                  <button type="button" className={styles.tbtn} data-testid="clear-stage" title="收起这幅画，清空输入，重新起稿" onClick={props.onClear}><Eraser size={14} aria-hidden="true" />清空</button>
                 </div>
               </div>
             ) : null}

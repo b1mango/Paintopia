@@ -37,6 +37,7 @@ export interface CreateViewProps {
   onHistoryToggle: (item: GeneratedAsset) => void;
   onHistorySelect: (item: GeneratedAsset) => void;
   onOpenLibrary: () => void;
+  onClear: () => void;
 }
 
 function isTyping(target: EventTarget | null) {
@@ -153,7 +154,7 @@ export function CreateView(props: CreateViewProps) {
   const viewerItems: ViewerItem[] = props.assets.length
     ? props.assets.map((item) => ({
       id: item.id,
-      imageUrl: item.imageUrl,
+      imageUrl: item.displayUrl ?? item.imageUrl,
       thumbnailUrl: item.thumbnailUrl ?? `/api/assets/${encodeURIComponent(item.id)}/thumbnail`,
       prompt: item.prompt,
       date: dayLabel(item.createdAt),
@@ -172,7 +173,8 @@ export function CreateView(props: CreateViewProps) {
         <Stage isGenerating={props.isGenerating} status={props.status} previewImageUrl={props.previewImageUrl} duration={props.duration}
           assets={props.assets} assetIndex={props.assetIndex} setAssetIndex={props.setAssetIndex}
           imageWidth={props.imageWidth} imageHeight={props.imageHeight} aspectRatio={props.aspectRatio}
-          onZoom={(origin) => setViewer({ origin })} onReuse={props.onHistorySelect} onUseAsReference={(asset) => useAsReference(asset.id)} onRetry={props.startGeneration} />
+          onZoom={(origin) => setViewer({ origin })} onReuse={props.onHistorySelect} onUseAsReference={(asset) => useAsReference(asset.id)} onRetry={props.startGeneration}
+          onClear={() => { props.onClear(); requestAnimationFrame(() => promptRef.current?.focus()); }} />
         <Composer promptRef={promptRef} prompt={props.prompt} setPrompt={props.setPrompt}
           files={props.files} assetIds={props.assetIds} referenceAssets={props.referenceAssets} referenceMessage={referenceMessage}
           onUpload={addReferenceFiles}

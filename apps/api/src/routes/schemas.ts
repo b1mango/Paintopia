@@ -61,10 +61,20 @@ export const templateSchema = z.object({
   content: z.string().min(1)
 });
 
+export const clientRequestIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,80}$/, "clientRequestId 格式无效");
+
+const generationParamsSchema = z.record(z.string(), z.unknown()).superRefine((params, ctx) => {
+  if (params.clientRequestId === undefined) return;
+  const result = clientRequestIdSchema.safeParse(params.clientRequestId);
+  if (!result.success) {
+    ctx.addIssue({ code: "custom", path: ["clientRequestId"], message: "clientRequestId 格式无效" });
+  }
+});
+
 export const generationSchema = z.object({
   prompt: imagePromptSchema,
   providerId: z.string().optional(),
-  params: z.record(z.string(), z.unknown()).default({})
+  params: generationParamsSchema.default({})
 });
 
 const promptToolSchema = z.object({
@@ -126,6 +136,8 @@ export const inviteQuerySchema = z.object({
 });
 
 export const IMAGE_GENERATION_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 };
+
+export const GENERATION_REQUEST_RATE_LIMIT = { limit: 60, windowMs: 60 * 1000 };
 
 export const TEXT_TOOL_RATE_LIMIT = { limit: 30, windowMs: 10 * 60 * 1000 };
 

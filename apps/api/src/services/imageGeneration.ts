@@ -14,9 +14,9 @@ import { HttpRequestError } from "./requestError.js";
 
 import { personalAssetExpiry, personalAssetKey, type AssetRetentionPolicy } from "../services/assetRetention.js";
 import { type AssetStorage } from "../services/assetStorage.js";
-import { createImageThumbnail } from "../services/imageThumbnail.js";
+import { createImageDisplay, createImageThumbnail } from "../services/imageThumbnail.js";
 import { type ProviderSecretCodec } from "../services/providerSecrets.js";
-import { assetThumbnailKey, deleteStoredAsset, displayAuthorName, imageMimeType, safeJsonParse } from "./assets.js";
+import { assetDisplayKey, assetThumbnailKey, deleteStoredAsset, displayAuthorName, imageMimeType, safeJsonParse } from "./assets.js";
 import { classifyImageResolution, decodedImageDimensions, ImageResolution, imageResolutionFromModelId, imageResolutionWarning, splitProviderModelIds } from "./imageCapabilities.js";
 import { decryptProviderRecord, sortProviders } from "./providerConfig.js";
 import { getUserEmailById } from "./users.js";
@@ -649,17 +649,28 @@ export async function persistGeneratedImages(
       actualResolution: classifyImageResolution(dimensions.width, dimensions.height)
     } : { ...params, ...upstreamMetadata };
     await assetStorage.put(objectKey, bytes, mimeType);
-    const thumbPath = await createImageThumbnail(bytes)
-      .then(async (thumbnail) => {
-        const key = assetThumbnailKey(assetId);
-        await assetStorage.put(key, thumbnail, "image/webp");
-        await assetStorage.put(`thumbnails/${assetId}-320.webp`, await createImageThumbnail(thumbnail, 320), "image/webp");
-        return key;
-      })
+    const thumbnail = await createImageThumbnail(bytes)
       .catch((error) => {
         console.warn("Paintopia thumbnail generation failed", error instanceof Error ? error.message : error);
         return null;
       });
+    let thumbPath: string | null = null;
+    if (thumbnail) {
+      // 高清预览只为观画提速；失败不影响已付费的原图，/display 首次访问时会再生成
+      try {
+        await assetStorage.put(assetDisplayKey(assetId), await createImageDisplay(bytes), "image/webp");
+      } catch (error) {
+        console.warn("Paintopia display generation failed", error instanceof Error ? error.message : error);
+      }
+      try {
+        const key = assetThumbnailKey(assetId);
+        await assetStorage.put(key, thumbnail, "image/webp");
+        await assetStorage.put(`thumbnails/${assetId}-320.webp`, await createImageThumbnail(thumbnail, 320), "image/webp");
+        thumbPath = key;
+      } catch (error) {
+        console.warn("Paintopia thumbnail generation failed", error instanceof Error ? error.message : error);
+      }
+    }
     const createdAt = new Date();
     return {
       id: assetId,
@@ -695,6 +706,7 @@ export async function persistGeneratedImages(
   return prepared.map((asset) => ({
     id: asset.id,
     imageUrl: `/api/assets/${asset.id}/original`,
+    displayUrl: `/api/assets/${asset.id}/display`,
     thumbnailUrl: `/api/assets/${asset.id}/thumbnail`,
     sizeBytes: asset.sizeBytes ?? null,
     ownerName,

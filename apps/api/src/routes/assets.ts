@@ -4,10 +4,10 @@ import { z } from "zod";
 import * as repo from "../db/repository.js";
 import type { ServerContext } from "../server/context.js";
 import { personalAssetExpiry, personalAssetKey } from "../services/assetRetention.js";
-import { deleteStoredAsset, detectUploadedImageMimeType, listAssets, listGalleryItems, readStoredAsset, serializeAsset } from "../services/assets.js";
+import { deleteStoredAsset, detectUploadedImageMimeType, galleryDisplayKey, listAssets, listGalleryItems, readStoredAsset, serializeAsset } from "../services/assets.js";
 import { decodedImageDimensions, invalidateImageCapabilities } from "../services/imageCapabilities.js";
 import { stripImageResultMetadata } from "../services/imageGeneration.js";
-import { assetDownloadFileName, sendAssetImage, sendAssetThumbnail, storeAssetThumbnail } from "./assetDelivery.js";
+import { assetDownloadFileName, sendAssetDisplay, sendAssetImage, sendAssetThumbnail, storeAssetThumbnail } from "./assetDelivery.js";
 import { allowUserAction, AuthedRequest } from "./authHelpers.js";
 import { MAX_EDIT_REFERENCE_IMAGE_BYTES } from "./imageEditInput.js";
 import { ASSET_UPLOAD_RATE_LIMIT, assetUploadSchema, idParamSchema } from "./schemas.js";
@@ -60,6 +60,19 @@ export function registerAssetsRoutes(app: FastifyInstance, ctx: ServerContext) {
     );
   });
 
+  app.get("/api/assets/:id/display", { preHandler: ctx.requireAuth }, async (request, reply) => {
+    const user = (request as AuthedRequest).user;
+    const { id } = idParamSchema.parse(request.params);
+    const asset = await repo.findAsset(appDb, id);
+    if (!asset || (asset.userId !== user.id && user.role !== "admin")) {
+      return reply.code(404).send({ error: "资产不存在" });
+    }
+    if (asset.status !== "ready") {
+      return reply.code(409).send({ error: "资产尚未上传完成" });
+    }
+    return sendAssetDisplay(reply, appDb, assetStorage, asset);
+  });
+
   app.get("/api/assets/:id/thumbnail", { preHandler: ctx.requireAuth }, async (request, reply) => {
     const user = (request as AuthedRequest).user;
     const { id } = idParamSchema.parse(request.params);
@@ -87,6 +100,7 @@ export function registerAssetsRoutes(app: FastifyInstance, ctx: ServerContext) {
     }
     await repo.deleteAsset(appDb, id, asset.userId);
     if (galleryItem?.objectKey) await assetStorage.delete(galleryItem.objectKey);
+    if (galleryItem) await assetStorage.delete(galleryDisplayKey(galleryItem.id));
     await deleteStoredAsset(appDb, assetStorage, asset);
     return reply.code(204).send();
   });

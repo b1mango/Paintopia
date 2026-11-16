@@ -250,7 +250,7 @@ export function Composer(props: ComposerProps) {
           <span aria-hidden="true">≈ {props.estimatedQuotaCost} 点</span>
           <span className="sr-only">预计消耗本站额度：{props.estimatedQuotaCost}{autoEstimate ? "（自动参数按上限预估）" : ""}</span>
         </span>
-        <button key={fire} type="button" className={styles.seal} data-testid="start-generation-button" data-fire={fire > 0 || undefined} data-busy={props.isGenerating || undefined}
+        <button key={fire} type="button" className={styles.seal} data-testid="start-generation-button" data-fire={fire > 0 || undefined} data-busy={props.isGenerating || undefined} data-live-motion={props.isGenerating || undefined}
           aria-label={props.isGenerating ? "生成中" : "开始生成"} title="落笔生成 · ⌘ Enter" disabled={!props.canGenerate} onClick={generate}>
           <span aria-hidden="true">绘</span>
           <i className={styles.sealRing} aria-hidden="true" />

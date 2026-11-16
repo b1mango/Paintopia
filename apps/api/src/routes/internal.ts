@@ -2,7 +2,7 @@ import { type FastifyInstance } from "fastify";
 import * as repo from "../db/repository.js";
 import type { ServerContext } from "../server/context.js";
 import { preservePermanentAsset } from "../services/assetRetention.js";
-import { addDays, deleteStoredAsset } from "../services/assets.js";
+import { addDays, deleteStoredAsset, galleryDisplayKey } from "../services/assets.js";
 import {
   deleteExpiredSessions
 } from "../services/authService.js";
@@ -19,6 +19,7 @@ export function registerInternalRoutes(app: FastifyInstance, ctx: ServerContext)
     for (const item of staleGallery) {
       await repo.expireGallery(appDb, item.id);
       if (item.objectKey) await assetStorage.delete(item.objectKey);
+      await assetStorage.delete(galleryDisplayKey(item.id));
     }
 
     const expiredAssets = await repo.listExpiredAssets(appDb, now);
@@ -37,6 +38,7 @@ export function registerInternalRoutes(app: FastifyInstance, ctx: ServerContext)
       }
       await repo.deleteAsset(appDb, asset.id, asset.userId);
       if (galleryItem?.objectKey) await assetStorage.delete(galleryItem.objectKey);
+      if (galleryItem) await assetStorage.delete(galleryDisplayKey(galleryItem.id));
       await deleteStoredAsset(appDb, assetStorage, asset);
       deletedAssets += 1;
     }
