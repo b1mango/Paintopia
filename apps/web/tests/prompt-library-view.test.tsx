@@ -58,24 +58,24 @@ async function openDetail(title = "作品 1") {
 const sourceButton = (name: RegExp) => within(screen.getByRole("group", { name: "筛选来源" })).getByRole("button", { name });
 
 describe("PromptLibraryView source UI", () => {
-  it("defaults to 2.5 when there are no curated prompts, hides the empty curated source and counts the server total", async () => {
+  it("defaults to all sources, hides the empty curated source and counts the server total", async () => {
     mockLibrary([item(0, { sourceId: oldSource.id, title: "旧模型作品", model: "gpt-image-2" }), item(1)]);
     render(<PromptLibraryView />);
     expect(await screen.findByText("作品 1")).toBeInTheDocument();
-    expect(sourceButton(/GPT Image 2.5 测试来源/)).toHaveAttribute("aria-pressed", "true");
+    expect(sourceButton(/全部来源/)).toHaveAttribute("aria-pressed", "true");
     expect(within(screen.getByRole("group", { name: "筛选来源" })).queryByRole("button", { name: /站主推荐/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("article")).toHaveLength(1);
-    expect(screen.queryByText("旧模型作品")).not.toBeInTheDocument();
-    expect(screen.getByText("条提示词").parentElement).toHaveTextContent("他山之石 · 共 1条提示词");
+    expect(screen.getAllByRole("article")).toHaveLength(2);
+    expect(screen.getByText("条提示词").parentElement).toHaveTextContent("全部来源 · 共 2条提示词");
     fireEvent.click(sourceButton(/GPT Image 2 测试来源/));
     expect(await screen.findByText("旧模型作品")).toBeInTheDocument();
     expect(screen.queryByText("作品 1")).not.toBeInTheDocument();
   });
-  it("opens on curated prompts when there are some, and shows the full effect image in the detail", async () => {
+  it("lists curated prompts first under all sources, and shows the full effect image in the detail", async () => {
     mockLibrary([curated(), item(1)]);
     render(<PromptLibraryView />);
     expect(await screen.findByText("精选雨巷")).toBeInTheDocument();
-    expect(sourceButton(/站主推荐/)).toHaveAttribute("aria-pressed", "true");
+    expect(sourceButton(/全部来源/)).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByRole("article")[0]).toHaveTextContent("精选雨巷");
     const chips = within(screen.getByRole("group", { name: "筛选来源" })).getAllByRole("button").map(button => button.textContent);
     expect(chips[1]).toMatch(/^站主推荐/);
     expect(screen.queryByText("精")).not.toBeInTheDocument();
@@ -126,7 +126,7 @@ describe("PromptLibraryView source UI", () => {
     const filters = within(screen.getByRole("complementary", { name: "提示词筛选" }));
     fireEvent.click(within(filters.getByRole("group", { name: "筛选标签" })).getByRole("button", { name: "摄影" }));
     await waitFor(() => expect(screen.getAllByRole("article")).toHaveLength(1));
-    expect(lastQuery()).toEqual({ source: "image-2-5", q: "", tag: "摄影", favorites: false });
+    expect(lastQuery()).toEqual({ source: "all", q: "", tag: "摄影", favorites: false });
     const photography = within(filters.getByRole("group", { name: "筛选标签" })).getByRole("button", { name: "摄影" });
     expect(photography).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(photography);
@@ -163,7 +163,7 @@ describe("PromptLibraryView source UI", () => {
     expect(screen.queryByText("作品 25")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "再看一些 · 还有 6 条" }));
     expect(await screen.findByText("作品 30")).toBeInTheDocument();
-    expect(lastQuery()).toMatchObject({ source: "image-2-5", offset: 24 });
+    expect(lastQuery()).toMatchObject({ source: "all", offset: 24 });
     expect(screen.getAllByRole("article")).toHaveLength(30);
     expect(screen.queryByRole("button", { name: /再看一些/ })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("搜索提示词"), { target: { value: "作品 30" } });
@@ -235,14 +235,16 @@ describe("PromptLibraryView source UI", () => {
     await waitFor(() => expect(within(modal).getByRole("status")).toHaveTextContent("手动选择文本复制"));
     expect(within(modal).queryByRole("button", { name: "已复制" })).not.toBeInTheDocument();
   });
-  it("does not silently fall back to GPT2 when 2.5 has no entries", async () => {
-    mockLibrary([item(1, { sourceId: oldSource.id, title: "旧模型作品" })]);
+  it("clearing filters returns to all sources", async () => {
+    mockLibrary([item(1, { sourceId: oldSource.id, title: "旧模型作品" }), item(2)]);
     render(<PromptLibraryView />);
-    await screen.findByText("没有符合条件的作品");
-    expect(screen.queryByRole("article")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "清除筛选" }));
-    expect(sourceButton(/GPT Image 2.5 测试来源/)).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByText("旧模型作品")).not.toBeInTheDocument();
+    await screen.findByText("旧模型作品");
+    fireEvent.click(sourceButton(/GPT Image 2.5 测试来源/));
+    await waitFor(() => expect(screen.queryByText("旧模型作品")).not.toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("搜索提示词"), { target: { value: "不存在" } });
+    fireEvent.click(await screen.findByRole("button", { name: "清除筛选" }));
+    expect(sourceButton(/全部来源/)).toHaveAttribute("aria-pressed", "true");
+    expect(await screen.findByText("旧模型作品")).toBeInTheDocument();
   });
   it("shows a source error, then retries without fabricated fallback", async () => {
     vi.mocked(promptLibraryApi.list).mockRejectedValueOnce(new Error("来源暂不可用"));

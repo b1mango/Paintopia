@@ -41,7 +41,7 @@ it("paginates after filtering, keeps source counts and facets independent of q/t
   expect(page.sources.map((source: { count: number }) => source.count)).toEqual([0, 2, 1, 1, 0]);
   expect(page.tags[0]).toEqual({ tag: "shared", count: 4 });
   expect((await get("?offset=100")).items).toEqual([]);
-  const filtered = await get("?source=youmind-gpt-image-2&q=FIRST&tag=shared");
+  const filtered = await get("?source=" + EXTERNAL_PROMPT_SOURCES[0].id + "&q=FIRST&tag=shared");
   expect(filtered.items.map((item: SourcedPrompt) => item.id)).toEqual([items[0].id]);
   expect(filtered.total).toBe(1);
   expect(filtered.tags).toEqual([{ tag: "shared", count: 2 }, { tag: "first", count: 1 }, { tag: "second", count: 1 }]);

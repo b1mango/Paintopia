@@ -47,7 +47,8 @@ export const ZEROLU_SOURCE: Readonly<PromptSource> = Object.freeze({
   license: "MIT", licenseUrl: "https://github.com/ZeroLu/awesome-gpt-image/blob/main/LICENSE",
   compatibilityNote: "来源标注 GPT Image 2，本站未独立验证。"
 });
-export const PROMPT_SOURCES = [CURATED_SOURCE, PROMPT_SOURCE, PROMPT_SOURCE_25, FREESTYLEFLY_SOURCE, ZEROLU_SOURCE] as const;
+/** 展示顺序：站主推荐、Freestylefly、Image 2.5、ZeroLu、YouMind（「全部来源」列表也按此顺序拼接）。 */
+export const PROMPT_SOURCES = [CURATED_SOURCE, FREESTYLEFLY_SOURCE, PROMPT_SOURCE_25, ZEROLU_SOURCE, PROMPT_SOURCE] as const;
 export const EXTERNAL_PROMPT_SOURCES = PROMPT_SOURCES.filter(source => source.id !== CURATED_SOURCE.id);
 const localized = z.object({ "zh-CN": z.string().max(3000).optional(), en: z.string().max(3000).optional() });
 const source25Item = z.object({

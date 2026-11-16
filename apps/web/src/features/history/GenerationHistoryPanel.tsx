@@ -98,14 +98,14 @@ function HistoryDetail({ item, onClose }: { item: GenerationHistoryItem; onClose
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = oldOverflow; previous?.focus(); };
   }, []);
   const runtime = item.params.__paintopiaRuntime as { imageGeneration?: { returnedCount?: number; outputs?: { assetId: string; width: number | null; height: number | null }[] } } | undefined;
-  const outputs = runtime?.imageGeneration?.outputs ?? [];
+  const outputs: { assetId: string; width: number | null; height: number | null; available?: boolean }[] = item.outputs ?? runtime?.imageGeneration?.outputs ?? [];
   const entries = [["接口来源", item.providerName || "未记录来源"], ["模型", item.model || "未记录模型"], ["用户", item.userEmail], ["生成耗时", duration(item)], ["开始时间", dateTime(item.createdAt)], ["更新时间", dateTime(item.updatedAt)], ["请求分辨率", textParam(item.params.resolution ?? item.params.size)], ["请求像素", textParam(item.params.size)], ["画幅", textParam(item.params.aspectRatio)], ["请求质量", textParam(item.params.quality)], ["请求张数", textParam(item.params.n ?? 1)], ["本站额度", item.quotaCost === null ? "未记录" : `${item.quotaCost} 额度`]];
   return createPortal(<div className={styles.backdrop} data-theme={theme} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <div ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <header className={styles.dialogHeader}><div><h2 id={titleId}>调用详情</h2><p>查看本次请求与执行结果</p></div><button className={styles.closeButton} type="button" aria-label="关闭调用详情" onClick={onClose}><X size={18} /></button></header>
       <div className={styles.dialogBody}><div className={styles.identity}><span>任务编号</span><code>{item.id}</code><Status value={item.status} /></div>
         <dl className={styles.metadata}>{entries.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-        {outputs.length ? <section className={styles.outputSizes}><h3>实际返回图片</h3><ul>{outputs.map(output => <li key={output.assetId}>{output.width && output.height ? output.width + " × " + output.height : "未记录像素"}<a href={"/api/assets/" + encodeURIComponent(output.assetId) + "/download"} download>下载原图</a></li>)}</ul></section> : null}
+        {outputs.length ? <section className={styles.outputSizes}><h3>实际返回图片</h3><ul>{outputs.map(output => <li key={output.assetId}>{output.width && output.height ? output.width + " × " + output.height : "未记录像素"}{output.available === false ? <span className={styles.outputGone} title="这张图已被删除或超过保存期限">已删除</span> : <a href={"/api/assets/" + encodeURIComponent(output.assetId) + "/download"} download>下载原图</a>}</li>)}</ul></section> : null}
         {item.error ? <section className={styles.failure}><h3>失败原因</h3><p>{item.error}</p></section> : null}
         <div className={styles.rawActions}><button type="button" className={styles.button} onClick={copyDetails}><Copy size={14} />复制请求参数与调用尝试</button>{copyStatus ? <span role="status">{copyStatus}</span> : null}</div>
         <details className={styles.raw}><summary>原始请求参数与调用尝试</summary><pre>{rawDetails}</pre></details>

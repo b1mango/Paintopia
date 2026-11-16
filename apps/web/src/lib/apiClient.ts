@@ -416,6 +416,8 @@ export type GenerationHistoryItem = {
   id: string; providerId: string | null; providerName: string; model: string;
   status: string; createdAt: string; updatedAt: string; params: Record<string, unknown>;
   error: string | null; durationMs: number | null; attempts?: unknown[];
+  /** 实际返回的图片；available 为 false 表示该图已删除或到期清理。 */
+  outputs?: { assetId: string; width: number | null; height: number | null; available?: boolean }[];
 };
 
 export type ImageModelCapability = {

@@ -55,6 +55,13 @@ export async function generationHistory(db: AppDatabase, filters: {
     SELECT ${json('note', ['jobId'])} AS job_id, user_id, -SUM(amount) AS cost FROM usage_ledger
     WHERE action = 'image_generation' AND (${rows.map(() => `(user_id = ? AND ${json('note', ['jobId'])} = ?)`).join(' OR ')})
     GROUP BY user_id, ${json('note', ['jobId'])}`, rows.flatMap(row => [row.user_id, row.id])) : [];
+  // 调用记录只存了资产 ID；图片可能已被删除或到期清理，标出仍可下载的那些
+  const outputIds = [...new Set(rows.flatMap(row => {
+    try { const outputs = JSON.parse(row.params_json)?.__paintopiaRuntime?.imageGeneration?.outputs; return Array.isArray(outputs) ? outputs.map((output: any) => output?.assetId).filter((id: unknown) => typeof id === 'string') : []; }
+    catch { return []; }
+  }))];
+  const readyAssets = new Set(outputIds.length ? (await db.query<{ id: string }>(
+    `SELECT id FROM assets WHERE status = 'ready' AND id IN (${outputIds.map(() => '?').join(',')})`, outputIds)).map(asset => asset.id) : []);
   const items = rows.map(row => {
     let params: any = {};
     try { params = JSON.parse(row.params_json) ?? {}; } catch { /* Legacy invalid JSON. */ }
@@ -63,7 +70,7 @@ export async function generationHistory(db: AppDatabase, filters: {
       providerName: row.provider_name, model: row.model, status: row.status,
       createdAt: new Date(Number(row.created_at)).toISOString(), updatedAt: new Date(Number(row.updated_at)).toISOString(),
       params, error: row.error, durationMs: Math.max(0, Number(row.updated_at) - Number(row.created_at)),
-      outputs: Array.isArray(generation?.outputs) ? generation.outputs : [],
+      outputs: Array.isArray(generation?.outputs) ? generation.outputs.map((output: any) => ({ ...output, available: readyAssets.has(output?.assetId) })) : [],
       attempts: Array.isArray(generation?.attempts) ? generation.attempts.filter((v: unknown) => v && typeof v === 'object' && !Array.isArray(v)) : [],
       quotaCost: Number(costs.find(cost => cost.job_id === row.id && cost.user_id === row.user_id)?.cost ?? 0) };
   });

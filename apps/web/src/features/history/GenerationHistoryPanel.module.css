@@ -67,6 +67,7 @@
 .outputSizes ul { padding: 0; list-style: none; }
 .outputSizes li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hair); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .outputSizes a { color: var(--seal); }
+.outputGone { color: var(--ink-3); }
 .summaryGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 26px; padding: 28px 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair-2); }
 .summaryGrid > div { display: flex; flex-direction: column; gap: 14px; padding: 0 20px; border-right: 1px solid var(--hair); }
 .summaryGrid > div:first-child { padding-left: 0; }

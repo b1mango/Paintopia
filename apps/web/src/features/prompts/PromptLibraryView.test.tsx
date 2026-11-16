@@ -9,9 +9,8 @@ const fixture: SourcedPrompt = { id: "image-2-5:test", sourceId: "image-2-5", ti
 const testSource: PromptSource = { id: fixture.sourceId, name: "测试来源", homepage: "https://github.com/example/prompts", feedUrl: "https://example.com", license: "CC BY 4.0", licenseUrl: "https://example.com/LICENSE", aggregatorUrl: "https://example.com", aggregatorLicenseUrl: "https://example.com/LICENSE", model: "gpt-image-2.5", compatibilityNote: "2.5 尚未验证" };
 const serve = (items: SourcedPrompt[] = [fixture], sources: PromptSource[] = [testSource], extra: Partial<PromptLibraryResponse> = {}) =>
   vi.mocked(promptLibraryApi.list).mockImplementation(servePromptLibrary(items, sources, extra));
-/** 首次请求先看站主推荐；为空时组件会改看 2.5，这一次探测请求要先消耗掉。 */
-const probe = servePromptLibrary([], [testSource]);
-const page = (extra: Partial<PromptLibraryResponse> = {}) => servePromptLibrary([fixture], [testSource], extra)({ source: "image-2-5", q: "", tag: "", favorites: false });
+/** 默认看全部来源，首个请求即正式列表。 */
+const page = (extra: Partial<PromptLibraryResponse> = {}) => servePromptLibrary([fixture], [testSource], extra)({ source: "all", q: "", tag: "", favorites: false });
 
 beforeEach(() => {
   vi.spyOn(promptLibraryApi, "list");
@@ -34,20 +33,18 @@ describe("sourced prompt library", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("来源不可用");
     fireEvent.click(screen.getByRole("button", { name: "重新加载" }));
     expect(await screen.findByText(fixture.title)).toBeInTheDocument();
-    expect(promptLibraryApi.list).toHaveBeenNthCalledWith(2, expect.objectContaining({ source: "paintopia-curated" }), { signal: expect.any(AbortSignal), refresh: true });
-    expect(promptLibraryApi.list).toHaveBeenLastCalledWith(expect.objectContaining({ source: "image-2-5" }), { signal: expect.any(AbortSignal), refresh: true });
+    expect(promptLibraryApi.list).toHaveBeenLastCalledWith(expect.objectContaining({ source: "all" }), { signal: expect.any(AbortSignal), refresh: true });
   });
   it("renders expired snapshots without a failure warning while a real refresh is pending", async () => {
     let complete!: (value: PromptLibraryResponse) => void;
     vi.mocked(promptLibraryApi.list)
-      .mockImplementationOnce(probe)
       .mockImplementationOnce(async () => page({ refreshNeeded: true }))
       .mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
     render(<PromptLibraryView />);
     expect(await screen.findByText(fixture.title)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(promptLibraryApi.list).toHaveBeenNthCalledWith(2, expect.anything(), { signal: expect.any(AbortSignal), refresh: false });
-    expect(promptLibraryApi.list).toHaveBeenNthCalledWith(3, expect.anything(), { signal: expect.any(AbortSignal), refresh: true });
+    expect(promptLibraryApi.list).toHaveBeenNthCalledWith(1, expect.anything(), { signal: expect.any(AbortSignal), refresh: false });
+    expect(promptLibraryApi.list).toHaveBeenNthCalledWith(2, expect.anything(), { signal: expect.any(AbortSignal), refresh: true });
     vi.spyOn(promptLibraryApi, "setFavorite").mockResolvedValue({ id: fixture.id, favorite: true });
     fireEvent.click(screen.getByRole("button", { name: "收藏 " + fixture.title }));
     await screen.findByRole("button", { name: "取消收藏 " + fixture.title });
@@ -55,10 +52,10 @@ describe("sourced prompt library", () => {
     await act(async () => complete({ ...refreshed, items: [{ ...fixture, title: "刷新后的作品" }] }));
     expect(screen.getByText("刷新后的作品")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "取消收藏 刷新后的作品" })).toHaveAttribute("aria-pressed", "true");
-    expect(promptLibraryApi.list).toHaveBeenCalledTimes(3);
+    expect(promptLibraryApi.list).toHaveBeenCalledTimes(2);
   });
   it("retains the visible snapshot when background refresh fails", async () => {
-    vi.mocked(promptLibraryApi.list).mockImplementationOnce(probe).mockImplementationOnce(async () => page({ refreshNeeded: true })).mockRejectedValueOnce(new Error("网络错误"));
+    vi.mocked(promptLibraryApi.list).mockImplementationOnce(async () => page({ refreshNeeded: true })).mockRejectedValueOnce(new Error("网络错误"));
     render(<PromptLibraryView />);
     expect(await screen.findByText(/来源更新未完成/)).toBeInTheDocument();
     expect(screen.getByText(fixture.title)).toBeInTheDocument();
@@ -73,7 +70,7 @@ describe("sourced prompt library", () => {
     fireEvent.click(screen.getByRole("button", { name: "清除筛选" }));
     fireEvent.click(within(await screen.findByRole("group", { name: "筛选标签" })).getByRole("button", { name: "摄影" }));
     expect(await screen.findByRole("article")).toBeInTheDocument();
-    expect(promptLibraryApi.list).toHaveBeenLastCalledWith({ source: "image-2-5", q: "", tag: "摄影", favorites: false }, expect.anything());
+    expect(promptLibraryApi.list).toHaveBeenLastCalledWith({ source: "all", q: "", tag: "摄影", favorites: false }, expect.anything());
     fireEvent.click(screen.getByRole("button", { name: "只看收藏" }));
     await waitFor(() => expect(screen.queryByRole("article")).not.toBeInTheDocument());
     expect(promptLibraryApi.list).toHaveBeenLastCalledWith(expect.objectContaining({ tag: "摄影", favorites: true }), expect.anything());
@@ -140,9 +137,10 @@ describe("partial source failures", () => {
     expect(promptLibraryApi.list).toHaveBeenLastCalledWith(expect.anything(), { signal: expect.any(AbortSignal), refresh: true });
     expect(screen.getByText(fixture.title)).toBeInTheDocument();
   });
-  it("keeps 2.5 selected on its failure and permits explicit switch to a healthy source", async () => {
+  it("keeps a failed source selected and permits explicit switch to a healthy source", async () => {
     serve([{ ...fixture, id: "youmind-gpt-image-2:test", sourceId: oldSource.id, title: "健康来源作品" }], [testSource, oldSource], { sourceErrors: [{ sourceId: fixture.sourceId, message: "来源暂不可用，请稍后重试" }] });
     render(<PromptLibraryView />);
+    fireEvent.click(within(await screen.findByRole("group", { name: "筛选来源" })).getByRole("button", { name: /测试来源/ }));
     expect(await screen.findByText("当前来源加载失败")).toBeInTheDocument();
     expect(within(screen.getByRole("group", { name: "筛选来源" })).getByRole("button", { name: /测试来源/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("article")).not.toBeInTheDocument();

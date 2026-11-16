@@ -81,7 +81,10 @@ describe("generation and asset integration", () => {
     expect(generation.outputs).toEqual([{ assetId: completed.assets[0].id, width: 1536, height: 1536, imageUrl: completed.assets[0].imageUrl }]);
     expect(completed.assets[0].params.providerId).toBe(created.json().id);
     const history = await app.inject({ url: "/api/generation-history", headers: { cookie } });
-    expect(history.json().items[0].outputs).toEqual(generation.outputs);
+    expect(history.json().items[0].outputs).toEqual(generation.outputs.map((output: object) => ({ ...output, available: true })));
+    expect((await app.inject({ method: "DELETE", url: "/api/assets/" + completed.assets[0].id, headers: { cookie } })).statusCode).toBe(204);
+    const afterDelete = await app.inject({ url: "/api/generation-history", headers: { cookie } });
+    expect(afterDelete.json().items[0].outputs[0].available).toBe(false);
     const attempt = generation.attempts[0];
     expect(attempt.requests[0]).toMatchObject({ endpoint: "https://example.test/v1/images/generations", parameters: { size: "2048x2048", quality: "auto", background: "transparent" } });
     expect(attempt.requests[0].parameters).not.toHaveProperty("stream");

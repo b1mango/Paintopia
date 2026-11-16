@@ -8,10 +8,6 @@ import styles from "./PromptLibraryView.module.css";
 export type PromptLibraryViewProps = { onUsePrompt?: (text: string) => void; canManage?: boolean };
 
 const TAG_PREVIEW = 14;
-/** 站主推荐为空时默认看 2.5，不悄悄退回旧模型来源。 */
-const FALLBACK_SOURCE_ID = "image-2-5";
-const defaultSource = (data: PromptLibraryResponse | null) =>
-  data?.sources.some(source => source.id === CURATED_SOURCE_ID && source.count > 0) ? CURATED_SOURCE_ID : FALLBACK_SOURCE_ID;
 
 function Cover({ item, full = false }: { item: SourcedPrompt; full?: boolean }) {
   let imageUrl = full ? item.imageUrl ?? item.coverUrl : item.coverUrl;
@@ -43,7 +39,6 @@ function Attribution({ item, source }: { item: SourcedPrompt; source?: PromptSou
     {source && <>
       <p><MaybeLink href={source.homepage}>{source.name}</MaybeLink> · <MaybeLink href={source.licenseUrl}>{source.license}</MaybeLink></p>
       <p><a href={source.aggregatorUrl} target="_blank" rel="noreferrer">来源仓库</a>（<a href={source.aggregatorLicenseUrl} target="_blank" rel="noreferrer">仓库许可</a>）。保留提示词原文，展示源提供的标题与描述；图片与原作权利以原作者声明为准。</p>
-      <p>{source.compatibilityNote}</p>
     </>}
   </div>;
 }
@@ -83,7 +78,8 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
   const [reload, setReload] = useState(0);
   const [query, setQuery] = useState("");
   const [term, setTerm] = useState("");
-  const [sourceId, setSourceId] = useState(CURATED_SOURCE_ID);
+  // 默认看全部来源
+  const [sourceId, setSourceId] = useState("");
   const [tag, setTag] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -93,7 +89,6 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
   const busyRef = useRef(new Set<string>());
   const savedFavorites = useRef(new Map<string, boolean>());
   const revalidated = useRef(false);
-  const defaultResolved = useRef(false);
   /** 每次筛选变化加一；翻页结果回来时若已过期就丢弃。 */
   const generation = useRef(0);
   const [feedback, setFeedback] = useState("");
@@ -123,10 +118,6 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
     setLoading(true); setLoadingMore(false); setError("");
     promptLibraryApi.list(listQuery, { signal: controller.signal, refresh: reload > 0 }).then(async (response) => {
       if (controller.signal.aborted) return;
-      if (!defaultResolved.current) {
-        defaultResolved.current = true;
-        if (sourceId === CURATED_SOURCE_ID && defaultSource(response) !== CURATED_SOURCE_ID) { controller.abort(); setSourceId(FALLBACK_SOURCE_ID); return; }
-      }
       applyResponse(response);
       setLoading(false);
       if (response.refreshNeeded && !revalidated.current) {
@@ -229,7 +220,7 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
   }
 
   const chooseSource = (id: string) => { setSourceId(id); setTag(""); setAllTags(false); };
-  const clearFilters = () => { setQuery(""); setTerm(""); setTag(""); setSourceId(defaultSource(data)); setFavoritesOnly(false); };
+  const clearFilters = () => { setQuery(""); setTerm(""); setTag(""); setSourceId(""); setFavoritesOnly(false); };
   const tags = data?.tags ?? [];
   const shownTags = allTags ? tags : tags.slice(0, TAG_PREVIEW);
   const visibleSources = data?.sources.filter((source) => source.count > 0 || source.id === sourceId || failedSourceIds.has(source.id)) ?? [];
@@ -241,7 +232,7 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
     <header className={styles.head}>
       <div>
         <h1>灵感</h1>
-        <p className={styles.count}>{loading && !data ? "正在翻检画谱…" : <>{sourceId === CURATED_SOURCE_ID ? "站主推荐" : "他山之石"} · 共 {total}<small>条提示词</small></>}</p>
+        <p className={styles.count}>{loading && !data ? "正在翻检画谱…" : <>{!sourceId ? "全部来源" : sourceId === CURATED_SOURCE_ID ? "站主推荐" : "他山之石"} · 共 {total}<small>条提示词</small></>}</p>
       </div>
       <label className={styles.search}><Search size={15} aria-hidden="true" /><input type="search" aria-label="搜索提示词" placeholder="搜索标题、内容或标签" maxLength={200} value={query} onChange={(event) => setQuery(event.target.value)} /></label>
     </header>
@@ -294,7 +285,7 @@ export function PromptLibraryView({ onUsePrompt, canManage = false }: PromptLibr
       </div>}
 
     {data?.sources.filter((source) => source.id !== CURATED_SOURCE_ID && (!sourceId || source.id === sourceId)).map((source) => <footer className={styles.sourceNote} key={source.id}>
-      <MaybeLink href={source.homepage}>{source.name}</MaybeLink><span> · </span><MaybeLink href={source.licenseUrl}>{source.license}</MaybeLink><p>{source.compatibilityNote}</p>
+      <MaybeLink href={source.homepage}>{source.name}</MaybeLink>
     </footer>)}
 
     {selected && <dialog ref={dialog} className={styles.dialog} aria-labelledby="prompt-detail-title" onClose={() => setSelectedId(null)} onCancel={() => setSelectedId(null)}

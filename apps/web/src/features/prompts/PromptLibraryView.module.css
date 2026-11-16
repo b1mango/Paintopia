@@ -84,7 +84,6 @@
 @keyframes breathe { 50% { opacity: .45; } }
 .sourceNote { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--hair); color: var(--ink-3); font-size: 11.5px; line-height: 1.8; }
 .sourceNote + .sourceNote { margin-top: 0; border-top: 0; padding-top: 0; }
-.sourceNote p { margin: 2px 0 0; }
 
 /* 详情：与「观画」同一间暗室 */
 .dialog {
