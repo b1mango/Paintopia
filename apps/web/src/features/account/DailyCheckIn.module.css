@@ -15,5 +15,4 @@
 @media (hover: hover) { .claim:hover:not(:disabled) { background: color-mix(in srgb, var(--seal), var(--ink) 14%); } }
 @media (pointer: coarse) { .claim { min-height: 40px; } }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 :global([data-reduce-motion="true"]) .spinner { animation: none; }

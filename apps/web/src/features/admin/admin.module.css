@@ -216,7 +216,6 @@
 }
 @media (max-width: 480px) { .railHeader { align-items: start; } .railHeaderActions { gap: 4px; } .sectionHeader { flex-wrap: wrap; } .railIconButton { width: 36px; height: 36px; } .modelLookupRow, .manualModelRow { gap: 8px; } }
 @media (pointer: coarse) { .railIconButton, .iconButton, .templateAdd, .templateTagButton, .templateTagActive, .primaryAction, .secondaryAction, .dangerAction, .primaryActionButton { min-height: 44px; min-width: 44px; } }
-@media (prefers-reduced-motion: reduce) { .sectionContent, .drawer[open], .confirmDialog[open], .emptyState[aria-busy="true"] .enso { animation: none; } }
 :global([data-reduce-motion="true"]) :is(.sectionContent, .drawer[open], .confirmDialog[open], .emptyState[aria-busy="true"] .enso) { animation: none; }
 .importPlan { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); margin: 0; border-block: 1px solid var(--hair); }
 .importPlan > div { display: grid; gap: 6px; padding: 14px 16px; border-right: 1px solid var(--hair); }

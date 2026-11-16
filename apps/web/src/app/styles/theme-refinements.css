@@ -105,7 +105,6 @@
 
 /* 生成进度（data-live-motion）属于状态反馈，减少动态时照常播放 */
 .shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *), .shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::before, .shell[data-reduce-motion="true"] :not([data-live-motion], [data-live-motion] *)::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-@media(prefers-reduced-motion:reduce) { .shell :not([data-live-motion], [data-live-motion] *), .shell :not([data-live-motion], [data-live-motion] *)::before, .shell :not([data-live-motion], [data-live-motion] *)::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 
 .templateHint {font-size:12px;line-height:1.6;color:var(--muted);font-weight:400;}
 .promptConfigPage > header {margin-bottom:24px;}

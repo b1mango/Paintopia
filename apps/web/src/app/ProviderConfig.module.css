@@ -24,5 +24,4 @@
 @media (max-width: 1000px) { .row { grid-template-columns: 28px minmax(0, 1fr); gap: 0 8px; } .row > .actions { grid-column: 2; padding-bottom: 8px; } }
 @media (max-width: 540px) { .formGrid { grid-template-columns: minmax(0, 1fr); } .form.form { padding: 22px 20px 0; } }
 @media (pointer: coarse) { .actions button { min-height: 44px; } }
-@media (prefers-reduced-motion: reduce) { .row { transition: none; } }
 :global([data-reduce-motion="true"]) .row { transition: none; }

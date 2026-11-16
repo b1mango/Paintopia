@@ -155,5 +155,5 @@
   .quotaGroup { display: none; }
   .avatarDot { display: block; }
 }
-@media (prefers-reduced-motion: reduce) { .quota em[data-bump], .quotaGain { animation: none; } .checkInSeal { transition: none; } }
 :global([data-reduce-motion="true"]) .quota em[data-bump], :global([data-reduce-motion="true"]) .quotaGain { animation: none; }
+:global([data-reduce-motion="true"]) .checkInSeal { transition: none; }

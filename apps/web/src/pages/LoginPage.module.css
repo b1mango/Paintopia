@@ -119,8 +119,6 @@
   .form { width: min(340px, 100%); justify-self: center; }
   .lead { text-align: center; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .art img, .brand, .seal, .form, .enter { animation: none; }
-  .art img { --r: 90%; }
-}
+:global([data-reduce-motion="true"]) :is(.art img, .brand, .seal, .form, .enter) { animation: none; }
+:global([data-reduce-motion="true"]) .art img { --r: 90%; }
 :root[data-reduce-motion="true"] .art img { --r: 90%; }

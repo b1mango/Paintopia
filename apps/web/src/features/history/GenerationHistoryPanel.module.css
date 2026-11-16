@@ -90,5 +90,4 @@
   .summaryGrid strong { font-size: 28px; }
 }
 @media (pointer: coarse) { .button, .primaryButton, .detailButton, .closeButton, .pageControls button, .pageControls select, .field input, .field select { min-height: 44px; } }
-@media (prefers-reduced-motion: reduce) { .dialog, .empty[role="status"]::before { animation: none; } }
 :global([data-reduce-motion="true"]) :is(.dialog, .empty[role="status"]::before) { animation: none; }

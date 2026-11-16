@@ -88,5 +88,4 @@
 @media (max-width: 640px), (pointer: coarse) { .dialog button, .choice, .actions button, .tabs button, .search, .galleryTags button, .filterSelect { min-height: 44px; } }
 
 @keyframes enter { from { opacity: 0; transform: translateY(7px); } }
-@media (prefers-reduced-motion: reduce) { .dialog { animation: none; } }
 :global([data-reduce-motion="true"]) .dialog { animation: none; }

@@ -168,7 +168,5 @@
   .library .favoriteFilter { margin-left: 0; }
   .cardFooter button, .library .star { height: 40px; min-width: 40px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .card, .skeleton, .dialog[open], .detailImage .cover, .detailBody, .library .star svg { animation: none; }
-  .cover, .results { transition: none; }
-}
+:global([data-reduce-motion="true"]) :is(.card, .skeleton, .dialog[open], .detailImage .cover, .detailBody, .library .star svg) { animation: none; }
+:global([data-reduce-motion="true"]) :is(.cover, .results) { transition: none; }

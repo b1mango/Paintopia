@@ -135,7 +135,5 @@
   .galleryGrid, .galleryColumn { gap: 8px; }
   .action { height: 40px; min-width: 40px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .galleryCard, .assetCard, .spinner, .empty[data-loading] svg, .tagMenu { animation: none; }
-  .galleryImage, .assetCard .open img { transition: none; }
-}
+:global([data-reduce-motion="true"]) :is(.galleryCard, .assetCard, .spinner, .empty[data-loading] svg, .tagMenu) { animation: none; }
+:global([data-reduce-motion="true"]) :is(.galleryImage, .assetCard .open img) { transition: none; }
