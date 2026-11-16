@@ -222,6 +222,41 @@ describe("AppShell", () => {
     expect(uploadInput).toBeEnabled();
   });
 
+  it("previews reference assets on click or Space and selects only via the corner check", async () => {
+    vi.spyOn(apiClient, "listAssets").mockResolvedValue([
+      { id: "ref-a", imageUrl: "/api/assets/ref-a/original", prompt: "misty ridge", createdAt: "2026-08-28T12:00:00.000Z" },
+      { id: "ref-b", imageUrl: "/api/assets/ref-b/original", prompt: "river town", createdAt: "2026-08-28T12:01:00.000Z" }
+    ]);
+    render(<AppShell user={{ email: "artist@paintopia.local", role: "user", quota: 100 }} />);
+    fireEvent.click(screen.getByTestId("open-reference-asset-picker"));
+
+    // 点图片只预览，不选中
+    fireEvent.click(await screen.findByTestId("preview-reference-asset-ref-a"));
+    const preview = await screen.findByRole("dialog", { name: "参考图预览" });
+    expect(within(preview).getByAltText("参考图大图")).toHaveAttribute("src", "/api/assets/ref-a/original");
+    expect(screen.getByTestId("select-reference-asset-ref-a")).toHaveAttribute("aria-pressed", "false");
+
+    // 预览里可直接选用；Esc 只关预览，选择框仍在
+    fireEvent.click(within(preview).getByRole("button", { name: "选为参考" }));
+    expect(screen.getByTestId("select-reference-asset-ref-a")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "参考图预览" })).not.toBeInTheDocument());
+    expect(screen.getByRole("dialog", { name: "选择资产参考图" })).toBeInTheDocument();
+
+    // 鼠标悬停时按空格预览，再按空格关闭
+    const tileB = screen.getByTestId("preview-reference-asset-ref-b").parentElement!;
+    fireEvent.mouseEnter(tileB);
+    fireEvent.keyDown(document, { key: " " });
+    expect(within(await screen.findByRole("dialog", { name: "参考图预览" })).getByAltText("参考图大图")).toHaveAttribute("src", "/api/assets/ref-b/original");
+    fireEvent.keyDown(document, { key: " " });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "参考图预览" })).not.toBeInTheDocument());
+
+    // 右上角圆圈才是选中开关
+    fireEvent.click(screen.getByTestId("select-reference-asset-ref-b"));
+    expect(screen.getByTestId("select-reference-asset-ref-b")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("已选 2")).toBeInTheDocument();
+  });
+
   it("shows recovered image-edit assets as a completed generation", async () => {
     let resolveRecoveredEdit!: (value: GenerationResponse) => void;
     const recoveredEdit = new Promise<GenerationResponse>((resolve) => {

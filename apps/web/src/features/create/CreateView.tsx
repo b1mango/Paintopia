@@ -216,25 +216,63 @@ export function CreateView(props: CreateViewProps) {
 
 function ReferencePicker({ assets, selected, full, onToggle, onClose }: { assets: GeneratedAsset[]; selected: string[]; full: boolean; onToggle: (id: string) => void; onClose: () => void }) {
   const ref = useModalFocus<HTMLDivElement>();
+  const [preview, setPreview] = useState<{ index: number; origin: DOMRect | null } | null>(null);
+  const hovered = useRef<string | null>(null);
+  const previewOpen = useRef(false);
+  previewOpen.current = Boolean(preview);
+
+  const openPreview = (id: string) => {
+    const index = assets.findIndex((item) => item.id === id);
+    if (index < 0) return;
+    const tile = ref.current?.querySelector<HTMLElement>(`[data-tile-id="${CSS.escape(id)}"]`);
+    setPreview({ index, origin: tile?.getBoundingClientRect() ?? null });
+  };
+
   useEffect(() => {
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); onClose(); } };
-    document.addEventListener("keydown", escape);
-    return () => document.removeEventListener("keydown", escape);
-  }, [onClose]);
+    const keys = (event: KeyboardEvent) => {
+      // 预览开着时 Esc 交给预览自己关，不连带关掉选择框
+      if (event.key === "Escape") { if (!previewOpen.current) { event.preventDefault(); onClose(); } return; }
+      if (event.key !== " " || event.repeat) return;
+      // 空格像访达的快速查看：开着就关，没开就预览鼠标所在或焦点所在的那张
+      if (previewOpen.current) { event.preventDefault(); setPreview(null); return; }
+      const focused = document.activeElement instanceof HTMLElement ? document.activeElement.closest<HTMLElement>("[data-tile-id]")?.dataset.tileId : undefined;
+      const id = hovered.current ?? focused;
+      if (!id) return;
+      event.preventDefault();
+      openPreview(id);
+    };
+    document.addEventListener("keydown", keys, true);
+    return () => document.removeEventListener("keydown", keys, true);
+  });
+
+  const items: ViewerItem[] = assets.map((item) => ({
+    id: item.id,
+    imageUrl: item.displayUrl ?? item.imageUrl,
+    thumbnailUrl: smallThumbnail(item),
+    prompt: item.prompt,
+    date: dayLabel(item.createdAt),
+    meta: artMeta(item)
+  }));
+
   return (
     <div className={styles.pickerBackdrop} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div ref={ref} className={styles.picker} role="dialog" aria-modal="true" aria-label="选择资产参考图">
-        <header><h2>选择资产参考图</h2><span>{selected.length ? `已选 ${selected.length}` : "点选作品，垫为参考"}</span></header>
+        <header><h2>选择资产参考图</h2><span>{selected.length ? `已选 ${selected.length}` : "点图预览，右上角圆圈选用"}</span></header>
         {assets.length ? (
           <div className={styles.pickerGrid}>
             {assets.map((item) => {
               const on = selected.includes(item.id);
               return (
-                <button key={item.id} type="button" data-testid={"select-reference-asset-" + item.id} aria-pressed={on} title={item.prompt} disabled={!on && full} onClick={() => onToggle(item.id)}>
-                  <img src={smallThumbnail(item)} onError={smallThumbnailFallback(item)} decoding="async" alt="" />
-                  <span className="sr-only">{item.prompt}</span>
-                  {on ? <i aria-hidden="true"><Check size={12} strokeWidth={3} /></i> : null}
-                </button>
+                <div key={item.id} className={styles.pickTile} data-tile-id={item.id} data-on={on || undefined} data-full={(!on && full) || undefined}
+                  onMouseEnter={() => { hovered.current = item.id; }} onMouseLeave={() => { if (hovered.current === item.id) hovered.current = null; }}>
+                  <button type="button" className={styles.pickPreview} data-testid={"preview-reference-asset-" + item.id} title={item.prompt} aria-label={"预览：" + item.prompt} onClick={() => openPreview(item.id)}>
+                    <img src={smallThumbnail(item)} onError={smallThumbnailFallback(item)} decoding="async" alt="" />
+                  </button>
+                  <button type="button" className={styles.pickCheck} data-testid={"select-reference-asset-" + item.id} aria-pressed={on} disabled={!on && full}
+                    aria-label={on ? "取消选用这张参考图" : "选用为参考图"} title={on ? "取消选用" : full ? "参考图已达上限" : "选用为参考图"} onClick={() => onToggle(item.id)}>
+                    <Check size={12} strokeWidth={3} aria-hidden="true" />
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -244,6 +282,15 @@ function ReferencePicker({ assets, selected, full, onToggle, onClose }: { assets
           <button type="button" className={styles.primaryButton} data-testid="confirm-reference-assets" data-autofocus onClick={onClose}>确定</button>
         </footer>
       </div>
+      {preview && items[preview.index] ? (
+        <Viewer title="参考图预览" imageAlt="参考图大图" items={items} index={preview.index} origin={preview.origin}
+          onIndexChange={items.length > 1 ? (index) => setPreview({ index, origin: null }) : undefined}
+          onClose={() => setPreview(null)}
+          extraActions={(item) => {
+            const on = selected.includes(item.id);
+            return [{ label: on ? "取消选用" : "选为参考", icon: <Check size={15} aria-hidden="true" />, disabled: !on && full, onClick: () => onToggle(item.id) }];
+          }} />
+      ) : null}
     </div>
   );
 }
