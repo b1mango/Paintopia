@@ -88,7 +88,7 @@ export function PromptOptimizerDialog({ initialPrompt, targetModel, onApply, onC
   }
   return <dialog ref={dialog} className={styles.dialog} aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); close(); }}>
     <header className={styles.header}>
-      <div><h2 id={titleId}>优化提示词</h2><p>先调整描述、选好模板与输出语言，再将优化结果应用到创作。</p></div>
+      <div><h2 id={titleId}>优化提示词</h2><p>调整描述、选择模板与输出语言后应用到画案</p></div>
       <button type="button" onClick={close} aria-label="关闭优化提示词">关闭</button>
     </header>
     <div className={styles.body}>

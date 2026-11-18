@@ -14,18 +14,17 @@ export function AdminLayout({ section, onSectionChange, children }: {
 }) {
   return <div className={styles.configLayout}>
     <aside className={styles.directory}>
-      <header className={styles.directoryTitle}><span aria-hidden="true">管</span><div><h1>管理后台</h1><p>理事有序，落笔从容。</p></div></header>
+      <header className={styles.directoryTitle}><span aria-hidden="true">管</span><div><h1>管理后台</h1></div></header>
       <nav className={styles.configTabs} aria-label="配置导航">
         {sections.map(item => <button key={item.id} type="button" aria-current={section === item.id ? "page" : undefined} onClick={() => onSectionChange(item.id)}>{item.label}</button>)}
       </nav>
-      <p className={styles.directoryFoot}>绘境 · 案后</p>
     </aside>
     <div className={styles.sectionContent}>{children}</div>
   </div>;
 }
 
-export function SectionHeading({ title, description, actions }: { title: string; description: string; actions?: ReactNode }) {
-  return <header className={styles.pageHeading}><div><h2>{title}</h2><p>{description}</p></div>{actions}</header>;
+export function SectionHeading({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
+  return <header className={styles.pageHeading}><div><h2>{title}</h2>{description ? <p>{description}</p> : null}</div>{actions}</header>;
 }
 
 export function AdminState({ children, error = false, loading = false, action, testId }: {

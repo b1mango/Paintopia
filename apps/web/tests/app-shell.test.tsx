@@ -826,18 +826,37 @@ describe("AppShell", () => {
     expect(within(form).queryByText("测试完成")).not.toBeInTheDocument();
   });
 
-  it("keeps only one styled select menu open at a time", () => {
-    render(<AppShell user={{ email: "artist@paintopia.local", role: "user", quota: 100 }} activeModule="settings" />);
+  it("keeps only one styled select menu open at a time and hides unimplemented language switch", async () => {
+    vi.spyOn(apiClient, "listProviders").mockResolvedValue([{
+      id: "text-1",
+      kind: "text",
+      name: "文本渠道",
+      model: "gpt-4.1-mini",
+      baseUrl: "https://api.example.test",
+      apiKey: "********",
+      mode: "chat_completions",
+      enabled: true,
+      maxConcurrency: 2
+    }]);
 
-    const themeField = screen.getByLabelText("主题").closest("label")!;
-    fireEvent.click(within(themeField).getByRole("button"));
-    expect(screen.getAllByRole("listbox")).toHaveLength(1);
-    expect(within(screen.getByRole("listbox")).getByRole("option", { name: "浅色" })).toBeInTheDocument();
+    const { rerender } = render(<AppShell user={{ email: "admin@paintopia.local", role: "admin", quota: 100 }} activeModule="settings" />);
+    expect(screen.getByLabelText("主题")).toBeInTheDocument();
+    expect(screen.queryByLabelText("语言")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "中文" }));
+    rerender(<AppShell user={{ email: "admin@paintopia.local", role: "admin", quota: 100 }} activeModule="config-text" />);
+    fireEvent.click(await screen.findByRole("button", { name: "文本渠道" }));
+    const drawer = screen.getByRole("dialog", { name: "编辑文本渠道" });
+    const modeField = within(drawer).getByLabelText("接口模式").closest("label")!;
+    const modelField = within(drawer).getByLabelText("模型").closest("label")!;
+
+    fireEvent.click(within(modeField).getByRole("button"));
     expect(screen.getAllByRole("listbox")).toHaveLength(1);
-    expect(within(screen.getByRole("listbox")).queryByRole("option", { name: "浅色" })).not.toBeInTheDocument();
-    expect(within(screen.getByRole("listbox")).getByRole("option", { name: "English" })).toBeInTheDocument();
+    expect(within(screen.getByRole("listbox")).getByRole("option", { name: "OpenAI Responses" })).toBeInTheDocument();
+
+    fireEvent.click(within(modelField).getByRole("button"));
+    expect(screen.getAllByRole("listbox")).toHaveLength(1);
+    expect(within(screen.getByRole("listbox")).queryByRole("option", { name: "OpenAI Responses" })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("listbox")).getByRole("option", { name: "gpt-4.1-mini" })).toBeInTheDocument();
   });
 
   it("submits selected resolution and quality buttons with concrete dimensions", async () => {

@@ -167,20 +167,26 @@
   right: 2px;
   display: grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(0, 0, 0, .58);
+  background: rgba(0, 0, 0, .62);
   color: #fff;
   opacity: 0;
-  transition: opacity .2s;
+  transition: opacity .2s var(--ease), background-color .16s var(--ease);
 }
-.refMove { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; opacity: 0; transition: opacity .2s; }
+.refRemove::after { content: ""; position: absolute; inset: -12px; }
+.refRemove:hover { background: var(--seal); }
+.refMove { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; opacity: 0; transition: opacity .2s var(--ease); }
 .refMove button { display: grid; place-items: center; width: 16px; height: 14px; padding: 0; border: 0; background: rgba(0, 0, 0, .5); color: #fff; }
 .refMove button:disabled { opacity: .3; }
 .ref:hover .refRemove, .ref:hover .refMove, .ref:focus-within .refRemove, .ref:focus-within .refMove { opacity: 1; }
+@media (hover: none), (pointer: coarse), (max-width: 760px) {
+  .refRemove, .refMove { opacity: 1; }
+  .refRemove { width: 22px; height: 22px; }
+}
 .addRef {
   display: grid;
   place-items: center;
@@ -435,7 +441,7 @@
 .toggle[aria-checked="true"]::after { transform: translateX(14px); }
 
 .dots { display: flex; align-items: center; gap: 9px; padding: 4px 2px; }
-.dots button { width: 18px; height: 18px; padding: 0; border: 1.5px solid var(--ink-4); border-radius: 50%; background: none; transition: all .3s var(--ease); }
+.dots button { width: 18px; height: 18px; padding: 0; border: 1.5px solid var(--ink-4); border-radius: 50%; background: none; transition: transform .3s var(--ease), background-color .3s var(--ease), border-color .3s var(--ease); }
 .dots button:hover { border-color: var(--ink); }
 .dots button[data-filled] { border-color: var(--ink-2); background: var(--hair-2); }
 .dots button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); transform: scale(.88); }

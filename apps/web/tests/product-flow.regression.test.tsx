@@ -153,7 +153,7 @@ describe("provider editor regressions", () => {
     const provider = { ...savedProvider, id: "saved-text", kind: "text" as const, name: "文本渠道", model: "text-original", mode: "chat_completions" };
     vi.mocked(apiClient.listProviders).mockResolvedValue([provider]);
     const update = vi.spyOn(apiClient, "updateProvider").mockImplementation(async (id, input) => ({ ...input, id }));
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const confirm = vi.spyOn(window, "confirm");
     render(<AppShell user={admin} activeModule="config-text" />);
     fireEvent.click(await screen.findByRole("button", { name: provider.name }));
     let drawer = screen.getByRole("dialog", { name: "编辑文本渠道" });
@@ -170,7 +170,10 @@ describe("provider editor regressions", () => {
     fireEvent.change(within(drawer).getByLabelText("名称"), { target: { value: "未保存文本渠道" } });
     fireEvent.change(within(drawer).getByLabelText("Base URL"), { target: { value: "https://unsaved.example.test" } });
     fireEvent.click(within(drawer).getByRole("button", { name: "关闭编辑窗口" }));
-    expect(window.confirm).toHaveBeenCalledWith("有未保存的修改，确认关闭并放弃这些修改？");
+    expect(confirm).not.toHaveBeenCalled();
+    const discardDialog = screen.getByRole("dialog", { name: "放弃未保存修改" });
+    expect(within(discardDialog).getByText("有未保存的修改，确认关闭并放弃这些修改？")).toBeInTheDocument();
+    fireEvent.click(within(discardDialog).getByRole("button", { name: "放弃修改" }));
     fireEvent.click(screen.getByRole("button", { name: "已保存文本渠道" }));
     drawer = screen.getByRole("dialog", { name: "编辑文本渠道" });
     expect(within(drawer).getByLabelText("名称")).toHaveValue("已保存文本渠道");
@@ -196,10 +199,10 @@ describe("provider editor regressions", () => {
     expect(within(screen.getByRole("dialog")).getByLabelText("名称")).toHaveValue("更新渠道");
   });
 
-  it("keeps candidate model discovery unsaved and prompts before discarding edits", async () => {
+  it("keeps candidate model discovery unsaved and prompts before discarding edits including StyledSelect changes", async () => {
     const update = vi.spyOn(apiClient, "updateProvider");
     vi.spyOn(apiClient, "listProviderModels").mockResolvedValue({ models: ["image-model", "candidate-model"] });
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirm = vi.spyOn(window, "confirm");
     render(<AppShell user={admin} activeModule="config-image" />);
     fireEvent.click(await screen.findByRole("button", { name: savedProvider.name }));
     const drawer = screen.getByRole("dialog", { name: "编辑生图渠道" });
@@ -207,16 +210,20 @@ describe("provider editor regressions", () => {
     await within(drawer).findByText(/已获取 2 个候选模型/);
     expect(within(drawer).getByLabelText("模型名称")).toHaveValue(["image-model"]);
     expect(update).not.toHaveBeenCalled();
-    fireEvent.change(within(drawer).getByLabelText("名称"), { target: { value: "未保存名称" } });
+    const modeField = within(drawer).getByLabelText("接口模式").closest("label")!;
+    fireEvent.keyDown(within(modeField).getByRole("button"), { key: "ArrowDown" });
+    fireEvent.click(within(within(modeField).getByRole("listbox")).getByRole("option", { name: "edits" }));
     fireEvent.click(within(drawer).getByRole("button", { name: "关闭编辑窗口" }));
-    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).not.toHaveBeenCalled();
+    const discardDialog = screen.getByRole("dialog", { name: "放弃未保存修改" });
+    fireEvent.click(within(discardDialog).getByRole("button", { name: "取消" }));
     expect(drawer).toHaveAttribute("open");
-    confirm.mockReturnValue(true);
     fireEvent.click(within(drawer).getByRole("button", { name: "关闭编辑窗口" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "放弃未保存修改" })).getByRole("button", { name: "放弃修改" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(update).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: savedProvider.name }));
-    expect(within(screen.getByRole("dialog")).getByLabelText("名称")).toHaveValue(savedProvider.name);
+    expect(within(screen.getByRole("dialog")).getByLabelText("接口模式")).toHaveValue(savedProvider.mode);
   });
 });
 

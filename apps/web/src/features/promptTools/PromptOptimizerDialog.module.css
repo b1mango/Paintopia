@@ -1,32 +1,304 @@
-.dialog { box-sizing:border-box; width:min(680px, calc(100% - 32px)); max-width:100%; max-height:calc(100dvh - 32px); margin:auto; padding:0; overflow-y:auto; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:16px; font:inherit; }
-.dialog::backdrop { background:color-mix(in srgb, var(--text) 32%, transparent); }
-.header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:24px; border-bottom:1px solid var(--border); }
-.header > div { min-width:0; }
-.header h2 { margin:0; font-size:20px; font-weight:600; line-height:1.3; }
-.header p { margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--muted); }
-.body { display:grid; gap:16px; padding:24px; min-width:0; }
-.field { display:grid; gap:8px; min-width:0; font-size:14px; font-weight:500; }
-.field textarea { box-sizing:border-box; width:100%; min-width:0; max-width:100%; min-height:120px; padding:12px; resize:vertical; color:var(--text); background:var(--input); border:1px solid var(--border); border-radius:8px; font:inherit; font-weight:400; line-height:1.6; }
-.runRow { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
-.runRow span, .feedback { margin:0; color:var(--muted); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
-.feedback { padding:12px; border-radius:8px; background:var(--surface-raised); color:var(--text); }
-.footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; border-top:1px solid var(--border); background:var(--surface); }
-.resultActions { display:flex; flex-wrap:wrap; gap:8px; }
-.dialog button { min-height:44px; padding:8px 16px; border:1px solid var(--border); border-radius:8px; font:inherit; font-size:13px; line-height:1.5; color:var(--text); background:var(--surface-raised); }
-.header > button { flex-shrink:0; }
-.dialog .primary { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); font-weight:600; }
-.dialog button:hover:not(:disabled) { border-color:var(--accent); background:var(--accent-soft); }
-.dialog button:active:not(:disabled) { background:var(--input); }
-.dialog button:disabled { opacity:.55; cursor:not-allowed; }
-.dialog textarea:disabled { opacity:.7; }
-.dialog :is(button, textarea):focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-@media (max-width:480px) { .dialog { width:calc(100% - 16px); max-height:calc(100dvh - 16px); border-radius:12px; } .header, .body { padding:16px; } .footer { padding:12px 16px; } .resultActions { flex:1; } .resultActions button { flex:1; padding-inline:12px; } }
-.language { display:inline-flex; padding:3px; gap:2px; border:1px solid var(--border); border-radius:10px; background:var(--input); }
-.dialog .language button { min-height:38px; padding:6px 14px; border-color:transparent; border-radius:7px; background:none; color:var(--muted); }
-.dialog .language button[aria-checked="true"] { background:var(--surface); border-color:var(--border); color:var(--text); font-weight:600; }
-.dialog .language button:hover:not(:disabled):not([aria-checked="true"]) { background:none; border-color:transparent; color:var(--text); }
-.templates { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
-.templatesLabel { margin-right:4px; font-size:14px; font-weight:500; }
-.dialog .templates button { min-height:36px; padding:6px 14px; border-radius:999px; background:none; color:var(--muted); }
-.dialog .templates button[aria-checked="true"] { border-color:var(--text); background:var(--surface-raised); color:var(--text); font-weight:600; }
-.dialog .templates button:hover:not(:disabled):not([aria-checked="true"]) { background:none; color:var(--text); }
+/* 墨境宣纸浮层：优化提示词 */
+.dialog {
+  box-sizing: border-box;
+  width: min(680px, calc(100% - 32px));
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--hair-2);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-float);
+  font: inherit;
+}
+
+.dialog[open] {
+  animation: dialog-enter 280ms var(--ease) both;
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--paper-2) 72%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.99);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--hair-2);
+}
+
+.header > div {
+  min-width: 0;
+}
+
+.header h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.header p {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-3);
+}
+
+.body {
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px;
+  min-width: 0;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  resize: vertical;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hair-2);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.7;
+  transition: border-color var(--t-touch) var(--ease);
+}
+
+.field textarea:hover:not(:disabled) {
+  border-color: var(--ink-4);
+}
+
+.runRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.runRow span,
+.feedback {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.feedback {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+
+.feedback[role="alert"] {
+  border-color: color-mix(in srgb, var(--danger-ink) 32%, transparent);
+  background: var(--seal-soft);
+  color: var(--danger-ink);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--hair-2);
+  background: var(--sheet);
+}
+
+.resultActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dialog button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  background: transparent;
+  transition:
+    background-color var(--t-touch) var(--ease),
+    border-color var(--t-touch) var(--ease),
+    color var(--t-touch) var(--ease),
+    transform 120ms var(--ease);
+}
+
+.header > button {
+  flex-shrink: 0;
+}
+
+.dialog button:hover:not(:disabled) {
+  border-color: var(--ink-4);
+  background: var(--hair);
+  color: var(--ink);
+}
+
+.dialog button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.dialog .primary,
+.runRow > button {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  font-weight: 500;
+}
+
+.dialog .primary:hover:not(:disabled),
+.runRow > button:hover:not(:disabled) {
+  background: var(--ink-2);
+  border-color: var(--ink-2);
+  color: var(--paper);
+}
+
+.dialog button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.dialog textarea:disabled {
+  opacity: .65;
+}
+
+.dialog :is(button, textarea):focus-visible {
+  outline: 1.5px solid var(--seal);
+  outline-offset: 2px;
+}
+
+.language {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--hair-2);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.dialog .language button {
+  min-height: 34px;
+  padding: 5px 14px;
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-3);
+}
+
+.dialog .language button[aria-checked="true"] {
+  background: var(--sheet);
+  border-color: var(--hair-2);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.dialog .language button:hover:not(:disabled):not([aria-checked="true"]) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.templatesLabel {
+  margin-right: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.dialog .templates button {
+  min-height: 34px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-3);
+}
+
+.dialog .templates button[aria-checked="true"] {
+  border-color: var(--seal);
+  background: var(--seal-soft);
+  color: var(--seal);
+  font-weight: 500;
+}
+
+@media (pointer: coarse) {
+  .dialog button,
+  .dialog .language button,
+  .dialog .templates button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+  .header,
+  .body {
+    padding: 16px;
+  }
+  .footer {
+    padding: 12px 16px;
+  }
+  .resultActions {
+    flex: 1;
+  }
+  .resultActions button {
+    flex: 1;
+    padding-inline: 12px;
+  }
+}
+
+:global([data-reduce-motion="true"]) .dialog[open] {
+  animation: none;
+}

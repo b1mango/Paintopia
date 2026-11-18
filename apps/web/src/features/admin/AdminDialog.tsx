@@ -1,6 +1,8 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import styles from "./admin.module.css";
+
+const activeDialogs: HTMLDialogElement[] = [];
 
 function useDialog(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -10,20 +12,25 @@ function useDialog(open: boolean, onClose: () => void) {
     if (!open) return;
     const dialog = ref.current!;
     const trigger = document.activeElement as HTMLElement | null;
+    const lockBody = activeDialogs.length === 0;
     const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (lockBody) document.body.style.overflow = "hidden";
+    activeDialogs.push(dialog);
     dialog.showModal();
     dialog.querySelector<HTMLElement>("[data-autofocus], button:not(:disabled)")?.focus();
     const escape = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (activeDialogs[activeDialogs.length - 1] !== dialog) return;
       event.preventDefault();
       closeRef.current();
     };
     document.addEventListener("keydown", escape);
     return () => {
       document.removeEventListener("keydown", escape);
+      const index = activeDialogs.lastIndexOf(dialog);
+      if (index !== -1) activeDialogs.splice(index, 1);
       dialog.close();
-      document.body.style.overflow = overflow;
+      if (lockBody) document.body.style.overflow = overflow;
       if (trigger?.isConnected) trigger.focus();
     };
   }, [open]);
@@ -32,16 +39,67 @@ function useDialog(open: boolean, onClose: () => void) {
 
 export function AdminDrawer({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
   const dirty = useRef(false);
-  useEffect(() => { if (open) dirty.current = false; }, [open]);
-  function close() {
-    if (dirty.current && !window.confirm("有未保存的修改，确认关闭并放弃这些修改？")) return;
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
+  useEffect(() => {
+    if (open) {
+      dirty.current = false;
+      setConfirmDiscardOpen(false);
+    }
+  }, [open]);
+
+  function requestClose() {
+    if (dirty.current) {
+      setConfirmDiscardOpen(true);
+      return;
+    }
     onClose();
   }
-  const ref = useDialog(open, close);
-  return <dialog ref={ref} className={styles.drawer} aria-modal="true" aria-label={title} onCancel={event => { event.preventDefault(); close(); }} onClick={event => { if (event.target === event.currentTarget) close(); }}>
-    <header className={styles.drawerHeader}><h2>{title}</h2><button className={styles.iconButton} type="button" aria-label="关闭编辑窗口" onClick={close}><X size={18} /></button></header>
-    <div className={styles.drawerBody} onChange={() => { dirty.current = true; }} onInput={() => { dirty.current = true; }}>{children}</div>
-  </dialog>;
+
+  function discardAndClose() {
+    dirty.current = false;
+    setConfirmDiscardOpen(false);
+    onClose();
+  }
+
+  const ref = useDialog(open, requestClose);
+  return (
+    <>
+      <dialog
+        ref={ref}
+        className={styles.drawer}
+        aria-modal="true"
+        aria-label={title}
+        onCancel={(event) => { event.preventDefault(); requestClose(); }}
+        onClick={(event) => { if (event.target === event.currentTarget) requestClose(); }}
+      >
+        <header className={styles.drawerHeader}>
+          <h2>{title}</h2>
+          <button className={styles.iconButton} type="button" aria-label="关闭编辑窗口" onClick={requestClose}>
+            <X size={18} />
+          </button>
+        </header>
+        <div
+          className={styles.drawerBody}
+          onChange={() => { dirty.current = true; }}
+          onInput={() => { dirty.current = true; }}
+        >
+          {children}
+        </div>
+      </dialog>
+      {open && confirmDiscardOpen ? (
+        <ConfirmDialog
+          label="放弃未保存修改"
+          title="放弃未保存的修改"
+          confirmLabel="放弃修改"
+          busy={false}
+          onCancel={() => setConfirmDiscardOpen(false)}
+          onConfirm={discardAndClose}
+        >
+          有未保存的修改，确认关闭并放弃这些修改？
+        </ConfirmDialog>
+      ) : null}
+    </>
+  );
 }
 
 export function ConfirmDialog({ label, title, children, busy, onCancel, onConfirm, confirmLabel = "确认删除" }: {

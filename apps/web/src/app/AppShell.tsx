@@ -1,6 +1,5 @@
 import { clearMediaCache } from "../lib/useMediaFeed";
 import { Suspense, useEffect, useRef, useState } from "react";
-import styles from "./AppShell.module.css";
 import shell from "./Shell.module.css";
 import { apiClient, type GeneratedAsset, type GenerationResponse, type ImageModelCapability, type QuotaPricingRule } from "../lib/apiClient";
 import { resolveImageSize, validateImageSize, inferImageResolution, inferImageAspectRatio } from "@paintopia/shared";
@@ -339,7 +338,7 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
   const isCreate = activeModule === "create";
 
   return (
-    <div className={`${styles.shell} ${shell.root}`} data-testid="app-shell" data-theme={resolvedTheme} data-language={language} data-reduce-motion={reduceMotion}>
+    <div className={shell.root} data-testid="app-shell" data-theme={resolvedTheme} data-language={language} data-reduce-motion={reduceMotion}>
       <TopNavigation
         activeModule={activeModule}
         userEmail={user.email}
@@ -352,8 +351,8 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
         onLogout={() => { clearMediaCache(); onLogout?.(); }}
       />
       {pendingLibraryPrompt !== null ? <PromptApplyDialog currentPrompt={prompt} incomingPrompt={pendingLibraryPrompt} onApply={text => { setPrompt(text); onNavigate?.("create"); }} onClose={() => setPendingLibraryPrompt(null)} /> : null}
-      <main className={`${styles.main} ${isCreate ? shell.createMain : shell.pageMain}`}>
-        <div className={`${styles.content} ${isCreate ? shell.createContent : shell.pageContent}`} key={activeModule.startsWith("config") ? "config" : activeModule}>
+      <main className={`${shell.main} ${isCreate ? shell.createMain : shell.pageMain}`}>
+        <div className={`${shell.content} ${isCreate ? shell.createContent : shell.pageContent}`} key={activeModule.startsWith("config") ? "config" : activeModule}>
           {isCreate ? <CreateView prompt={prompt} setPrompt={setPrompt}
             files={files} setFiles={(next) => { restoredSource.current = null; setFiles(next); }}
             assetIds={assetIds} setAssetIds={(next) => { restoredSource.current = null; setAssetIds(next); }}
@@ -377,8 +376,8 @@ export function AppShell({ user, activeModule = "create", onNavigate, onLogout }
             onReuse={(asset) => { restoreAsset(asset); onNavigate?.("create"); }}
             onUseAsReference={(asset) => { if (!assetIds.includes(asset.id) && files.length + assetIds.length < MAX_REFERENCE_IMAGES) { restoredSource.current = null; setAssetIds([...assetIds, asset.id]); setReferencesWanted(true); } onNavigate?.("create"); }} /> : null}
           {activeModule === "usage-log" ? <UsageLogView /> : null}
-          {activeModule === "profile" ? <div className={styles.settingsLayout}><ProfileView user={{...user,quota:remainingQuota}} checkIn={checkIn} onLogout={onLogout} /></div> : null}
-          {activeModule === "settings" ? <div className={styles.settingsLayout}><SettingsView theme={theme} language={language} reduceMotion={reduceMotion} setTheme={setTheme} setLanguage={setLanguage} setReduceMotion={setReduceMotion} /></div> : null}
+          {activeModule === "profile" ? <div className={shell.settingsLayout}><ProfileView user={{...user,quota:remainingQuota}} checkIn={checkIn} onLogout={onLogout} /></div> : null}
+          {activeModule === "settings" ? <div className={shell.settingsLayout}><SettingsView theme={theme} language={language} reduceMotion={reduceMotion} setTheme={setTheme} setLanguage={setLanguage} setReduceMotion={setReduceMotion} /></div> : null}
           {(activeModule === "config" || activeModule.startsWith("config-")) && user.role === "admin" ? <ConfigView section={(activeModule === "config" ? "stats" : activeModule.slice(7)) as ConfigSection} onSectionChange={section => onNavigate?.(section === "stats" ? "config" : ("config-" + section) as ModuleId)} /> : null}
           </Suspense>
         </div>

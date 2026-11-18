@@ -16,12 +16,12 @@
 @keyframes enter { from { opacity: 0; transform: translateY(7px); } }
 .stack, .statsStack, .userManagementStack, .promptConfigPage, .providerListPage { display: grid; gap: 24px; min-width: 0; }
 .pageHeading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 4px 0 0; }
-.pageHeading.pageHeading h2, .panel.panel h2, .templateHeader h3, .toolHead h3, .drawerHeader h2, .confirmDialog h2, .tablePanel h2 { margin: 0; font-family: var(--serif); font-weight: 500; letter-spacing: .05em; color: var(--ink); }
-.pageHeading.pageHeading h2 { font-size: 26px; }
+.pageHeading h2, .panel h2, .templateHeader h3, .toolHead h3, .drawerHeader h2, .confirmDialog h2, .tablePanel h2 { margin: 0; font-family: var(--serif); font-weight: 500; letter-spacing: .05em; color: var(--ink); }
+.pageHeading h2 { font-size: 26px; }
 .pageHeading p, .panelDescription { margin: 10px 0 0; color: var(--ink-3); font-size: 12px; line-height: 1.8; }
 .panel, .tablePanel, .configRail, .templateSection, .toolCard { min-width: 0; border: 1px solid var(--hair-2); border-radius: var(--radius-card); background: var(--sheet); color: var(--ink); }
 .panel { padding: 26px; }
-.panel.panel h2, .tablePanel.tablePanel h2 { font-size: 20px; }
+.panel h2, .tablePanel h2 { font-size: 20px; }
 .panel :is(input, textarea, select):disabled { opacity: .5; cursor: not-allowed; }
 .panel > p { color: var(--ink-3); font-size: 12px; line-height: 1.8; }
 .sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
@@ -32,10 +32,6 @@
 .field input:focus, .field textarea:focus, .field select:focus, .manualModelRow input:focus, .quotaEditor input:focus, .userToolbar input:focus { border-color: var(--ink-3); outline: 1px solid var(--seal); }
 .field textarea { min-height: 240px; resize: vertical; line-height: 1.8; }
 .field input::placeholder, .field textarea::placeholder, .manualModelRow input::placeholder, .userToolbar input::placeholder { color: var(--ink-3); }
-.field [aria-haspopup="listbox"], .settingsList [aria-haspopup="listbox"], .userToolbar [aria-haspopup="listbox"] { min-height: 44px; height: auto; border: 1px solid var(--hair-2); border-radius: 8px; background: var(--paper); color: var(--ink); padding: 10px 12px; font-weight: 400; font-size: 13px; box-shadow: none; }
-.field [role="listbox"], .settingsList [role="listbox"], .userToolbar [role="listbox"] { border: 1px solid var(--hair-2); border-radius: 10px; background: var(--sheet); box-shadow: var(--shadow-float); }
-.field [role="option"], .settingsList [role="option"], .userToolbar [role="option"] { min-height: 38px; border: 0; background: none; color: var(--ink-2); font-weight: 400; }
-.field [role="option"]:hover, .settingsList [role="option"]:hover, .userToolbar [role="option"]:hover, .field [role="option"][aria-selected="true"], .settingsList [role="option"][aria-selected="true"], .userToolbar [role="option"][aria-selected="true"] { color: var(--ink); background: var(--hair); }
 .primaryAction, .secondaryAction, .dangerAction, .primaryActionButton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--hair-2); border-radius: 8px; background: none; color: var(--ink-2); font-size: 12px; line-height: 1.5; white-space: nowrap; transition: background var(--t-touch) var(--ease), color var(--t-touch) var(--ease), border-color var(--t-touch) var(--ease); }
 .primaryAction, .primaryActionButton { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .secondaryAction:hover:not(:disabled) { color: var(--ink); background: var(--hair); border-color: var(--ink-4); }
@@ -200,7 +196,7 @@
   .panel, .configRail, .toolCard { padding: 20px; }
   .templateHeader { padding: 18px 20px; align-items: flex-start; }
   .pageHeading { align-items: flex-start; }
-  .pageHeading.pageHeading h2 { font-size: 24px; }
+  .pageHeading h2 { font-size: 24px; }
   .adminSplitPane { grid-template-columns: minmax(0, 1fr); padding: 20px; gap: 20px; }
   .templateList { flex-direction: row; overflow-x: auto; padding-bottom: 6px; }
   .templateTagButton, .templateTagActive { width: auto; flex: 0 0 auto; max-width: 240px; }

@@ -41,6 +41,7 @@ interface ViewerProps {
 }
 
 const EASE = "cubic-bezier(.22,1,.36,1)";
+const isReduceMotion = () => typeof document !== "undefined" && document.documentElement.dataset.reduceMotion === "true";
 
 /** 观画：全屏灯箱。缩略图先上，原图到达后无缝替换；从来源元素 FLIP 展开。 */
 export function Viewer({ title, imageAlt, items, index, origin, onIndexChange, onClose, onReuse, onUseAsReference, extraActions }: ViewerProps) {
@@ -58,7 +59,7 @@ export function Viewer({ title, imageAlt, items, index, origin, onIndexChange, o
 
   // FLIP：只在首次打开时，从来源缩略图位置展开
   useLayoutEffect(() => {
-    if (flipped.current || !origin || !imageRef.current?.animate) return;
+    if (flipped.current || !origin || !imageRef.current?.animate || isReduceMotion()) return;
     flipped.current = true;
     const target = imageRef.current.getBoundingClientRect();
     if (!target.width || !target.height) return;
@@ -72,7 +73,7 @@ export function Viewer({ title, imageAlt, items, index, origin, onIndexChange, o
     if (items.length < 2 || !onIndexChange) return;
     const next = (index + direction + items.length) % items.length;
     const image = imageRef.current;
-    if (!image?.animate) { onIndexChange(next); return; }
+    if (!image?.animate || isReduceMotion()) { onIndexChange(next); return; }
     image.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: `translateX(${-direction * 24}px)` }], { duration: 160, easing: "ease-in", fill: "forwards" })
       .onfinish = () => {
         onIndexChange(next);

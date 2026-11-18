@@ -20,7 +20,7 @@ export function StatsView({ isAdmin }: { isAdmin: boolean }) {
   const textStats = stats?.textStats;
   const userStats = stats?.userStats;
   return <div className={styles.statsStack}>
-    <SectionHeading title="统计" description="从每一次调用，读懂画案的日常。" />
+    <SectionHeading title="统计" />
     {error ? <AdminState error action={<button type="button" className={styles.secondaryAction} onClick={() => setRevision(value => value + 1)}>重新加载统计</button>}>{error}</AdminState> : null}
     <GenerationHistoryPanel allUsers={isAdmin} summary={<div className={styles.statGrid} aria-busy={!stats}>
       <div><span>总任务</span><strong>{stats?.total ?? "—"}</strong></div>
@@ -46,5 +46,5 @@ export function StatsView({ isAdmin }: { isAdmin: boolean }) {
 
 /** 使用日志：管理员也只看自己的记录，全站记录在后台「统计」。 */
 export function UsageLogView() {
-  return <div className={styles.statsStack}><SectionHeading title="使用日志" description="每次创作的去向、用时与额度，都有迹可循。" /><GenerationHistoryPanel /></div>;
+  return <div className={styles.statsStack}><SectionHeading title="使用日志" /><GenerationHistoryPanel /></div>;
 }

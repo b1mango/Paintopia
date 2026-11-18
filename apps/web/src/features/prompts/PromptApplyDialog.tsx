@@ -52,7 +52,7 @@ export function PromptApplyDialog({ currentPrompt, incomingPrompt, onApply, onCl
       onCancel={(event) => { event.preventDefault(); finish(); }} onClose={() => { if (!dialog.current?.open) finish(); }}>
       <header className={styles.header}>
         <h2 id={titleId}>使用所选提示词</h2>
-        <p id={descriptionId}>替换当前内容，或将所选提示词追加到末尾。</p>
+        <p id={descriptionId}>替换当前内容，或将所选提示词追加到末尾</p>
       </header>
       <div className={styles.body}>
         <label className={styles.field}>当前提示词

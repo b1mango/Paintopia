@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Check, Tags, UserRound, X } from "lucide-react";
-import styles from "./AppShell.module.css";
 import reviewStyles from "./GalleryReviewConfig.module.css";
 import adminStyles from "../features/admin/admin.module.css";
 import { apiClient, type GalleryItem } from "../lib/apiClient";

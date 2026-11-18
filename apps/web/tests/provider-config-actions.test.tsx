@@ -120,6 +120,7 @@ for (const kind of ["image", "text"] as const) {
     fireEvent.click(screen.getByRole("button", { name: addName }));
     fireEvent.change(screen.getByLabelText("名称"), { target: { value: "discard" } });
     fireEvent.click(screen.getByRole("button", { name: "关闭编辑窗口" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "放弃未保存修改" })).getByRole("button", { name: "放弃修改" }));
     fireEvent.click(screen.getByRole("button", { name: addName }));
     expect(screen.getByLabelText("名称")).toHaveValue("");
     const create = vi.spyOn(apiClient, "createProvider").mockResolvedValue({ ...providers[0], id: "created", name: "Fresh" });
